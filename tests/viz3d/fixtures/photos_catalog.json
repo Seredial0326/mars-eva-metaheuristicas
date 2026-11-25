@@ -1,0 +1,396 @@
+{
+ "provenance": "Trimmed from the real P3 block 1 catalogue (data/tiles/3d/photos/catalog.json, generation 9d2e6fb0bc52df508447d619, 383 photos in 100 groups) by a one-off script kept outside the repo (make_photos_fixture.mjs, 2026-11-14): groups stop_0000, stop_0018, stop_0079 with all their photos (7), in catalogue order. Every value is the source's, except that each photo's rectification, places_join, dem and pose.diagnostics were removed and this text replaces the source's provenance (local file paths). The image files themselves are not included.",
+ "bbox": {
+  "xmax": 8144537.492786024,
+  "xmin": 8142537.492786024,
+  "ymax": -283463.075189438,
+  "ymin": -285463.075189438
+ },
+ "crs_proj4": "+proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=3396190 +units=m +no_defs=True",
+ "download_manifest": "generations/9d2e6fb0bc52df508447d619/download_manifest.json",
+ "generation": "9d2e6fb0bc52df508447d619",
+ "groups": [
+  {
+   "available_quadrants": [
+    2
+   ],
+   "candidate_count": 4,
+   "id": "stop_0000",
+   "missing_quadrants": [
+    0,
+    1,
+    3
+   ],
+   "photo_ids": [
+    "NRB_792543037EDR_F1130726NCAM00385M_"
+   ],
+   "representative": {
+    "drive": 726,
+    "places_pose": -1,
+    "site": 113,
+    "xy": [
+     8143954.272,
+     -283733.679
+    ],
+    "z": -3720.751
+   }
+  },
+  {
+   "available_quadrants": [
+    1,
+    2
+   ],
+   "candidate_count": 8,
+   "id": "stop_0018",
+   "missing_quadrants": [
+    0,
+    3
+   ],
+   "photo_ids": [
+    "NRB_796010883EDR_F1141362NCAM00385M_",
+    "NRB_796008493EDR_F1141260NCAM00385M_"
+   ],
+   "representative": {
+    "drive": 1260,
+    "places_pose": -1,
+    "site": 114,
+    "xy": [
+     8143795.688,
+     -284057.149
+    ],
+    "z": -3698.765
+   }
+  },
+  {
+   "available_quadrants": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "candidate_count": 50,
+   "id": "stop_0079",
+   "missing_quadrants": [],
+   "photo_ids": [
+    "NRB_811806299EDR_F1190000NCAM00288M_",
+    "NRB_811806355EDR_F1190000NCAM00288M_",
+    "NLB_811807254EDR_F1190000NCAM00290M_",
+    "NRB_811807532EDR_F1190000NCAM00289M_"
+   ],
+   "representative": {
+    "drive": 3252,
+    "places_pose": -1,
+    "site": 118,
+    "xy": [
+     8143184.373,
+     -284990.857
+    ],
+    "z": -3605.026
+   }
+  }
+ ],
+ "photos": [
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_792543037EDR_F1130726NCAM00385M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_792543037EDR_F1130726NCAM00385M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_792543037EDR_F1130726NCAM00385M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_792543037EDR_F1130726NCAM00385M__unwarped.jpg"
+   },
+   "date_taken": "2025-02-11T11:54:53.000Z",
+   "distance_to_representative_m": 0,
+   "drive": 726,
+   "group_id": "stop_0000",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04450/opgs/edr/ncam/NRB_792543037EDR_F1130726NCAM00385M_.JPG",
+   "id": "NRB_792543037EDR_F1130726NCAM00385M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04450M13:38:27.231",
+   "places_pose": -1,
+   "pose": {
+    "fov": 40,
+    "heading": 3.6262841952086857,
+    "pitch": 0.47285928208373246,
+    "source_hfov_deg": 45.51622056776461,
+    "source_vfov_deg": 45.52865748373051,
+    "x": 8143952.989283434,
+    "y": -283733.6235368482,
+    "z": -3718.917013381136
+   },
+   "quadrant": 2,
+   "rover_position": {
+    "x": 8143954.272,
+    "y": -283733.679,
+    "z": -3720.751
+   },
+   "site": 113,
+   "sol": 4450,
+   "source_id": 1431639,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796010883EDR_F1141362NCAM00385M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_796010883EDR_F1141362NCAM00385M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796010883EDR_F1141362NCAM00385M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796010883EDR_F1141362NCAM00385M__unwarped.jpg"
+   },
+   "date_taken": "2025-03-23T15:12:51.000Z",
+   "distance_to_representative_m": 8.68787154609763,
+   "drive": 1362,
+   "group_id": "stop_0018",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04489/opgs/edr/ncam/NRB_796010883EDR_F1141362NCAM00385M_.JPG",
+   "id": "NRB_796010883EDR_F1141362NCAM00385M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04489M15:10:00.100",
+   "places_pose": -1,
+   "pose": {
+    "fov": 40,
+    "heading": 2.9151739126945526,
+    "pitch": 0.3886577103460407,
+    "source_hfov_deg": 45.51632366278051,
+    "source_vfov_deg": 45.52857429987623,
+    "x": 8143792.070066006,
+    "y": -284066.12627912394,
+    "z": -3695.9668716674073
+   },
+   "quadrant": 1,
+   "rover_position": {
+    "x": 8143792.562,
+    "y": -284065.255,
+    "z": -3697.948
+   },
+   "site": 114,
+   "sol": 4489,
+   "source_id": 1448226,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796008493EDR_F1141260NCAM00385M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_796008493EDR_F1141260NCAM00385M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796008493EDR_F1141260NCAM00385M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_796008493EDR_F1141260NCAM00385M__unwarped.jpg"
+   },
+   "date_taken": "2025-03-23T14:33:01.000Z",
+   "distance_to_representative_m": 0,
+   "drive": 1260,
+   "group_id": "stop_0018",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04489/opgs/edr/ncam/NRB_796008493EDR_F1141260NCAM00385M_.JPG",
+   "id": "NRB_796008493EDR_F1141260NCAM00385M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04489M14:31:13.857",
+   "places_pose": -1,
+   "pose": {
+    "fov": 40,
+    "heading": 3.599586665433092,
+    "pitch": 0.41049717808952585,
+    "source_hfov_deg": 45.51614895232477,
+    "source_vfov_deg": 45.52863065000969,
+    "x": 8143794.394284036,
+    "y": -284056.9698947953,
+    "z": -3696.946672251794
+   },
+   "quadrant": 2,
+   "rover_position": {
+    "x": 8143795.688,
+    "y": -284057.149,
+    "z": -3698.765
+   },
+   "site": 114,
+   "sol": 4489,
+   "source_id": 1448167,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806299EDR_F1190000NCAM00288M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_811806299EDR_F1190000NCAM00288M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806299EDR_F1190000NCAM00288M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806299EDR_F1190000NCAM00288M__unwarped.jpg"
+   },
+   "date_taken": "2025-09-22T10:52:18.000Z",
+   "distance_to_representative_m": 4.897726819679458,
+   "drive": 0,
+   "group_id": "stop_0079",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04667/opgs/edr/ncam/NRB_811806299EDR_F1190000NCAM00288M_.JPG",
+   "id": "NRB_811806299EDR_F1190000NCAM00288M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04667M13:25:45.669",
+   "places_pose": 0,
+   "pose": {
+    "fov": 40,
+    "heading": 0.8761766306544362,
+    "pitch": 0.2956574736061762,
+    "source_hfov_deg": 45.51595424445192,
+    "source_vfov_deg": 45.52821342602894,
+    "x": 8143189.042549145,
+    "y": -284994.6453888618,
+    "z": -3602.676461731455
+   },
+   "quadrant": 0,
+   "rover_position": {
+    "x": 8143188.021,
+    "y": -284994.125,
+    "z": -3604.63
+   },
+   "site": 119,
+   "sol": 4667,
+   "source_id": 1517176,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806355EDR_F1190000NCAM00288M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_811806355EDR_F1190000NCAM00288M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806355EDR_F1190000NCAM00288M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811806355EDR_F1190000NCAM00288M__unwarped.jpg"
+   },
+   "date_taken": "2025-09-22T10:53:13.000Z",
+   "distance_to_representative_m": 4.897726819679458,
+   "drive": 0,
+   "group_id": "stop_0079",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04667/opgs/edr/ncam/NRB_811806355EDR_F1190000NCAM00288M_.JPG",
+   "id": "NRB_811806355EDR_F1190000NCAM00288M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04667M13:26:39.671",
+   "places_pose": 0,
+   "pose": {
+    "fov": 40,
+    "heading": 1.9182257366003639,
+    "pitch": 0.2957193790191122,
+    "source_hfov_deg": 45.515849991195864,
+    "source_vfov_deg": 45.528472952789905,
+    "x": 8143188.867866532,
+    "y": -284994.79992371995,
+    "z": -3602.660483032075
+   },
+   "quadrant": 1,
+   "rover_position": {
+    "x": 8143188.021,
+    "y": -284994.125,
+    "z": -3604.63
+   },
+   "site": 119,
+   "sol": 4667,
+   "source_id": 1517184,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NLB_811807254EDR_F1190000NCAM00290M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NLB_811807254EDR_F1190000NCAM00290M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NLB_811807254EDR_F1190000NCAM00290M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NLB_811807254EDR_F1190000NCAM00290M__unwarped.jpg"
+   },
+   "date_taken": "2025-09-22T11:08:13.000Z",
+   "distance_to_representative_m": 4.897726819679458,
+   "drive": 0,
+   "group_id": "stop_0079",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04667/opgs/edr/ncam/NLB_811807254EDR_F1190000NCAM00290M_.JPG",
+   "id": "NLB_811807254EDR_F1190000NCAM00290M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_LEFT_B",
+   "lmst": "Sol-04667M13:41:14.956",
+   "places_pose": 0,
+   "pose": {
+    "fov": 40,
+    "heading": 4.102162099588896,
+    "pitch": -0.17437623656604082,
+    "source_hfov_deg": 45.36438201010952,
+    "source_vfov_deg": 45.36000185448272,
+    "x": 8143188.851696121,
+    "y": -284994.7986259057,
+    "z": -3602.619561251318
+   },
+   "quadrant": 2,
+   "rover_position": {
+    "x": 8143188.021,
+    "y": -284994.125,
+    "z": -3604.63
+   },
+   "site": 119,
+   "sol": 4667,
+   "source_id": 1517297,
+   "validation_status": "pending_visual"
+  },
+  {
+   "assets": {
+    "rectified": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811807532EDR_F1190000NCAM00289M__rectified.png",
+    "source_available": true,
+    "source_relative_path": "NRB_811807532EDR_F1190000NCAM00289M_.JPG",
+    "status": "available",
+    "thumbnail": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811807532EDR_F1190000NCAM00289M__thumbnail.jpg",
+    "unwarped": "generations/9d2e6fb0bc52df508447d619/assets/NRB_811807532EDR_F1190000NCAM00289M__unwarped.jpg"
+   },
+   "date_taken": "2025-09-22T11:12:51.000Z",
+   "distance_to_representative_m": 4.897726819679458,
+   "drive": 0,
+   "group_id": "stop_0079",
+   "https_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04667/opgs/edr/ncam/NRB_811807532EDR_F1190000NCAM00289M_.JPG",
+   "id": "NRB_811807532EDR_F1190000NCAM00289M_",
+   "image_credit": "NASA/JPL-Caltech",
+   "instrument": "NAV_RIGHT_B",
+   "lmst": "Sol-04667M13:45:45.291",
+   "places_pose": 0,
+   "pose": {
+    "fov": 40,
+    "heading": 6.107604474519319,
+    "pitch": 0.2961177775442886,
+    "source_hfov_deg": 45.51591201886503,
+    "source_vfov_deg": 45.528356573276824,
+    "x": 8143189.002741765,
+    "y": -284994.41599719913,
+    "z": -3602.705459339817
+   },
+   "quadrant": 3,
+   "rover_position": {
+    "x": 8143188.021,
+    "y": -284994.125,
+    "z": -3604.63
+   },
+   "site": 119,
+   "sol": 4667,
+   "source_id": 1517312,
+   "validation_status": "pending_visual"
+  }
+ ],
+ "report": "generations/9d2e6fb0bc52df508447d619/report.json",
+ "schema_version": 1,
+ "selection": {
+  "distance_metric": "horizontal Euclidean",
+  "max_group_radius_m": 10,
+  "priority": [
+   "absolute_pitch",
+   "distance_to_representative",
+   "imageid"
+  ],
+  "quadrants": "0=[0,90), 1=[90,180), 2=[180,270), 3=[270,360) degrees",
+  "representative": "first stable actual PLACES position; never chained or averaged"
+ },
+ "sources": "generations/9d2e6fb0bc52df508447d619/sources.json",
+ "units": {
+  "dates": "UTC ISO 8601",
+  "fov": "degrees; square rectified viewport",
+  "heading": "radians clockwise from north",
+  "pitch": "radians positive down from horizon",
+  "position": "metres; x=easting, y=northing, z=elevation"
+ },
+ "validation_status": "pending_visual"
+}

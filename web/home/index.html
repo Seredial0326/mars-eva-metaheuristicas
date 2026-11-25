@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Mars EVA Planner</title>
+<meta name="description" content="Plan an astronaut's walk through the boxwork of Gale crater with a way home from every point, rehearse it in 3D and follow it on an arm tablet.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Mars EVA Planner</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-demo" href="/docs/user_guide/">User guide</a>
+      <a class="nav-demo" href="demo.html">Watch the demo</a>
+      <a class="btn btn-primary btn-sm" href="/?tab=terrain">Try it</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Hero: title and the four entry points, then a large shot of the 3D view. -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero__text">
+      <div class="hero__title">
+        <p class="eyebrow">Gale crater, Mars</p>
+        <h1 id="hero-title">Every step keeps a <span class="redline">way home</span>.</h1>
+      </div>
+      <div class="hero__side">
+        <p class="lede">Mars EVA Planner plans an astronaut's walk through the boxwork of Gale crater and checks, at every point, that there is enough energy and time to get back. Then you rehearse it in 3D and follow it on an arm tablet.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/?tab=terrain">Try it</a>
+          <a class="btn btn-secondary" href="/3d/">Open in 3D</a>
+          <a class="btn btn-secondary" href="/guide.html">Guide (tablet)</a>
+          <a class="btn btn-link" href="demo.html">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.2v5.6L11 8z" fill="currentColor"/></svg>
+            Watch the demo
+          </a>
+        </div>
+        <p class="hero__guides">Every button explained, with screenshots: <a href="/docs/user_guide/">2D planner user guide</a> · <a href="/docs/user_guide_3d/">3D map user guide</a></p>
+      </div>
+    </div>
+    <figure class="wrap hero__shot">
+      <img src="assets/hero-3d-1600.webp"
+           srcset="assets/hero-3d-960.webp 960w, assets/hero-3d-1600.webp 1600w, assets/hero-3d-2400.webp 2400w"
+           sizes="(min-width: 1384px) 1320px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+           width="1600" height="900" fetchpriority="high" decoding="async"
+           alt="The 3D view of the boxwork at an angle: the planned route leaves the habitat in blue and returns in pink, past numbered science stations.">
+      <figcaption>
+        <span>The 3D view with the 120 min tour: outbound in blue, return in pink.</span>
+        <span class="spec">2 × 2 km box · 1 m grid · Sun of sol 4711</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- The demo video, embedded from YouTube (the only external resource of the page). -->
+  <section class="band-dark video" id="video" aria-labelledby="video-title">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="section__title">
+          <h2 id="video-title">The demo, on video</h2>
+        </div>
+        <div class="text">
+          <p>One walkthrough of planning, the way back, the 3D rehearsal and the tablet guide.</p>
+        </div>
+      </div>
+      <div class="video__frame">
+        <iframe src="https://www.youtube-nocookie.com/embed/7LSQqSFdU6c?rel=0" title="Mars EVA Planner: the 30-second demo (YouTube)"
+                loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+      </div>
+      <!-- The video is on YouTube; the button also works where the embed cannot load (offline). -->
+      <p class="video__alt"><a class="btn btn-primary" data-youtube-link href="https://www.youtube.com/watch?v=7LSQqSFdU6c">Watch on YouTube</a></p>
+      <p class="video__more"><a class="more" href="demo.html">Follow the demo step by step</a></p>
+    </div>
+  </section>
+
+  <!-- 1 Plan -->
+  <section class="section" id="plan" aria-labelledby="plan-title">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="section__title">
+          <p class="eyebrow"><span class="dot" aria-hidden="true">1</span>Plan</p>
+          <h2 id="plan-title">Choose stations. It finds the walk.</h2>
+        </div>
+        <div class="text">
+          <p>Set the habitat, the time and the energy, and the planner picks which science stations to visit and in what order. With <strong class="num">13</strong> stations and <strong class="num">120</strong> minutes, it visits <strong class="num">8</strong> and keeps a way back from every point.</p>
+          <a class="more" href="/">Plan (2D)</a>
+          <a class="more" href="/docs/user_guide/">2D planner user guide</a>
+        </div>
+      </div>
+      <figure class="shot">
+        <img src="assets/plan-2d-1400.webp"
+             srcset="assets/plan-2d-800.webp 800w, assets/plan-2d-1400.webp 1400w, assets/plan-2d-2000.webp 2000w"
+             sizes="(min-width: 1264px) 1200px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+             width="1400" height="875" loading="lazy" decoding="async"
+             alt="The 2D planner after planning: the route runs from the habitat to 8 numbered stations over the orbital photo, and the sidebar sums up time, energy and the visiting order.">
+        <figcaption><span>The Plan tab after <em>Plan the walk</em>.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 2 Check the way back -->
+  <section class="section band-alt" id="way-back" aria-labelledby="way-back-title">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="section__title">
+          <p class="eyebrow"><span class="dot" aria-hidden="true">2</span>Check the way back</p>
+          <h2 id="way-back-title">The red line follows the ground.</h2>
+        </div>
+        <div class="text">
+          <p>The red line marks how far the astronaut can go and still be home within the <strong class="num">30</strong> minutes of emergency oxygen. Scarps and slopes shape it, so it is never a circle.</p>
+        </div>
+      </div>
+      <figure class="shot">
+        <img src="assets/walkback-2d-1400.webp"
+             srcset="assets/walkback-2d-800.webp 800w, assets/walkback-2d-1400.webp 1400w, assets/walkback-2d-2000.webp 2000w"
+             sizes="(min-width: 1264px) 1200px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+             width="1400" height="875" loading="lazy" decoding="async"
+             alt="The Walk tab over the whole 2 by 2 km box: a red line winds around the habitat following the terrain, a dark shade covers what the energy left cannot reach, and dashed arcs show the fixed-distance circles.">
+        <figcaption>
+          <span>About a third of what a fixed 1.35 km circle calls safe cannot get back in 30 min. In tests, simple rules called <strong class="num">21–46 %</strong> of their goals safe when they were not; the planner, <strong class="num">0 %</strong>.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3 Rehearse -->
+  <section class="section" id="rehearse" aria-labelledby="rehearse-title">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="section__title">
+          <p class="eyebrow"><span class="dot" aria-hidden="true">3</span>Rehearse</p>
+          <h2 id="rehearse-title">Walk it first, at eye height.</h2>
+        </div>
+        <div class="text">
+          <p>The 3D view lays the plan on the HiRISE terrain, under the Sun of the same sol, with the same meters. Curiosity's <strong class="num">383</strong> Navcam photos sit where they were taken.</p>
+          <a class="more" href="/3d/">Open in 3D</a>
+          <a class="more" href="/docs/user_guide_3d/">3D map user guide</a>
+        </div>
+      </div>
+      <div class="shots-2">
+        <figure class="shot">
+          <img src="assets/rehearse-3d-1400.webp"
+               srcset="assets/rehearse-3d-800.webp 800w, assets/rehearse-3d-1400.webp 1400w, assets/rehearse-3d-2000.webp 2000w"
+               sizes="(min-width: 1264px) 752px, (min-width: 800px) 61vw, calc(100vw - 32px)"
+               width="1400" height="788" loading="lazy" decoding="async"
+               alt="The 3D rehearsal from behind the astronaut, who stands at station R2 on a ridge; the blue route climbs ahead and the player panel shows spare energy, the time home, radio and EVA time left.">
+          <figcaption><span>Rehearse the route, chase view.</span></figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/photo-3d-1000.webp"
+               srcset="assets/photo-3d-640.webp 640w, assets/photo-3d-1000.webp 1000w, assets/photo-3d-1600.webp 1600w"
+               sizes="(min-width: 1264px) 428px, (min-width: 800px) 35vw, calc(100vw - 32px)"
+               width="1000" height="989" loading="lazy" decoding="async"
+               alt="A Curiosity Navcam photo of pale fractured plates, laid half-transparent over the same place in the 3D terrain.">
+          <figcaption><span>A Navcam photo over the terrain.</span><span>Photo: NASA/JPL-Caltech</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Follow -->
+  <section class="section band-alt" id="guide" aria-labelledby="guide-title">
+    <div class="wrap split">
+      <div class="section__head">
+        <div class="section__title">
+          <p class="eyebrow"><span class="dot" aria-hidden="true">4</span>Follow</p>
+          <h2 id="guide-title">It answers on site, without Earth.</h2>
+        </div>
+        <div class="text">
+          <p>A radio signal takes <strong class="num">3–22</strong> minutes each way between Mars and Earth, so the arm tablet works alone. It speaks the next turn, shows energy, time back and radio, and turns home in a solar storm.</p>
+          <a class="more" href="/guide.html">Guide (tablet)</a>
+        </div>
+      </div>
+      <div class="screens">
+        <figure class="shot">
+          <img src="assets/guide-walk-800.webp"
+               srcset="assets/guide-walk-480.webp 480w, assets/guide-walk-800.webp 800w, assets/guide-walk-1184.webp 1184w"
+               sizes="(min-width: 1264px) 300px, (min-width: 900px) 24vw, 45vw"
+               width="800" height="1595" loading="lazy" decoding="async"
+               alt="Guide mode on a tablet: 420 m to station R3, a warning that direct radio drops in 80 m, four green meters and the route map.">
+          <figcaption><span>Walking: a radio warning.</span></figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/guide-storm-800.webp"
+               srcset="assets/guide-storm-480.webp 480w, assets/guide-storm-800.webp 800w, assets/guide-storm-1184.webp 1184w"
+               sizes="(min-width: 1264px) 300px, (min-width: 900px) 24vw, 45vw"
+               width="800" height="1595" loading="lazy" decoding="async"
+               alt="Guide mode during a simulated solar storm: a red banner says to return home now, the next turn gives the time home, and the map shows the way home in red.">
+          <figcaption><span>A solar storm: return home now.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Limits -->
+  <section class="section" id="limits" aria-labelledby="limits-title">
+    <div class="wrap limits">
+      <h2 id="limits-title">What it does not claim</h2>
+      <div>
+        <ul>
+          <li>It is tested in simulation and against Curiosity's route, not with astronauts.</li>
+          <li>The energy model is an extrapolation to a suited astronaut on Mars.</li>
+          <li>There is no GPS on Mars, so the walk on the tablet is simulated.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- The paper (#196): what it asks and finds. Its link stays hidden until the paper is public. -->
+  <section class="section band-alt" id="paper" aria-labelledby="paper-title">
+    <div class="wrap paper">
+      <div class="section__title">
+        <p class="eyebrow">The paper</p>
+        <h2 id="paper-title">The science behind it.</h2>
+      </div>
+      <div class="paper__body">
+        <p class="paper__name">Planning astronaut EVAs in the Gale crater boxwork: terrain-aware walkback, station tours and a learned terrain price, tested against Curiosity's traverse</p>
+        <p class="paper__by">Mars EVA Planner team · NASA Space Apps Challenge 2026 · draft</p>
+        <p>We price every step of a suited walk on a 1&nbsp;m elevation model under Mars gravity, check the way home from every point, and choose the science stations with an exact solver. Then we test the terrain model against the route Curiosity actually drove.</p>
+        <ul class="paper__results">
+          <li>Simple rules call <strong class="num">21–46&nbsp;%</strong> of their goals safe when their own route cannot complete them. The planner never does.</li>
+          <li>About <strong class="num">a third</strong> of the area inside a fixed 1.35&nbsp;km radius cannot be left and re-entered within the 30&nbsp;min emergency oxygen reserve.</li>
+          <li>The terrain explains which valley Curiosity chose, not its path within the boxwork. Only sand earns a small learned price.</li>
+          <li>An adaptive reserve cuts oxygen exhaustion from <strong class="num">90&nbsp;%</strong> to <strong class="num">4.7&nbsp;%</strong> of simulated walks when the astronaut uses 1.5 times the predicted energy.</li>
+        </ul>
+        <p class="paper__soon">Paper coming soon. It will be linked here with the submission.</p>
+        <!-- When the paper is public: put its URL in href, remove "hidden" and the line above. -->
+        <a class="btn btn-primary" data-paper-link href="#" hidden>Read the paper</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team and credits -->
+  <section class="section" id="credits" aria-labelledby="team-title">
+    <div class="wrap credits">
+      <div>
+        <h2 id="team-title">Team</h2>
+        <ul class="team">
+          <li>Aaron</li>
+          <li>Diana</li>
+          <li>Javier</li>
+          <li>Juan</li>
+          <li>Sebastian</li>
+        </ul>
+        <p class="event">Made for the NASA Space Apps Challenge 2026, Martian Map challenge.</p>
+      </div>
+      <div>
+        <h2 id="credits-title">Images and data</h2>
+        <ul class="sources">
+          <li>Curiosity Navcam photos: NASA/JPL-Caltech. Rover positions: MSL PLACES, NASA/JPL, PDS Imaging Node.</li>
+          <li>HiRISE colour orthophoto (25 cm) and DEM (1 m) mosaics of Gale crater: Calef and Parker; Parker and Calef (2016), USGS Astrogeology. HiRISE: NASA/JPL-Caltech/University of Arizona.</li>
+          <li>Radiation: MSL RAD, SwRI and NASA SPDF. Boulders: BoulderNet, Prieur et al. (2023), CC BY 4.0.</li>
+          <li>Screenshots come from the app running on a laptop, offline. Full list of sources: <code>paper/references.md</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Mars EVA Planner</span>
+    <span>NASA Space Apps Challenge 2026 · Runs offline on the habitat's server</span>
+  </div>
+</footer>
+</body>
+</html>

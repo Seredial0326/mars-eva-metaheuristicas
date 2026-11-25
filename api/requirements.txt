@@ -1,0 +1,20 @@
+# Python packages for the API, the HUD backend and the tests (versions used to build the demo).
+# Install in a normal (non-admin) terminal, inside the team's environment:
+#   python -m pip install -r api/requirements.txt
+# E11 radio (/comms/*, /layers/comms*) also needs GDAL's Python bindings, which pip does
+# not install well on Windows: conda install -c conda-forge gdal. Without them the
+# rest of the API starts and only those routes answer 503.
+fastapi==0.162.5
+uvicorn==0.54.0
+pydantic==2.14.3
+numpy==2.5.4
+scipy==1.18.1
+rasterio==1.5.2
+geopandas==1.2.0
+pyogrio==0.13.0
+shapely==2.2.0
+contourpy==1.4.0
+matplotlib==3.11.2
+pillow==13.0.0
+httpx==0.28.1
+pytest==9.2.0

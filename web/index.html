@@ -1,0 +1,2378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mars EVA Planner</title>
+<script src="/vendor/deck.gl-9.1.14.min.js"></script>
+<style>
+  /* Layout: a docked sidebar whose tabs follow the real order of work (terrain ->
+     stations -> plan -> walk, plus context), and the map with its own legend. Dark on
+     purpose: it is a map tool, and the terrain colours need a quiet frame. */
+  :root {
+    --bg: #0b0e12; --surface: #141920; --surface-2: #1c232c; --surface-3: #262f3a;
+    --text: #e8ecf1; --muted: #a3aebb; --accent: #ff7a45; --accent-ink: #1a0f08;
+    --good: #3ddc84; --warn: #f2c94c; --bad: #ff5a4f;
+    --border: rgba(255, 255, 255, 0.11); --border-strong: rgba(255, 255, 255, 0.34); --side: 372px;
+    --hatch: repeating-linear-gradient(45deg, rgba(14,16,20,.95) 0 3px, rgba(14,16,20,.45) 3px 6px);
+    color-scheme: dark;
+  }
+  ::selection { background: rgba(255, 122, 69, 0.38); color: var(--text); }
+  * { scrollbar-color: var(--surface-3) transparent; scrollbar-width: thin; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ic { width: 1.05em; height: 1.05em; vertical-align: -0.16em; flex: none; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+               font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- sidebar ---- */
+  #side { display: flex; flex-direction: column; min-height: 0; height: 100vh; background: var(--surface);
+          border-right: 1px solid var(--border); }
+  .side-head { padding: 14px 16px 10px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: 0; line-height: 1.25; }
+  h1 span { color: var(--accent); font-weight: 600; }
+  .tagline { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  #sources-chip { margin-top: 8px; display: inline-flex; gap: 6px; align-items: center; font: inherit; font-size: 12px;
+                  color: var(--muted); background: var(--surface-2); border: 1px solid var(--border);
+                  border-radius: 999px; padding: 3px 10px; cursor: pointer; width: auto; font-weight: 500; }
+  #sources-chip b { color: var(--text); }
+  #guide-chip { margin-top: 8px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 500;
+                color: var(--muted); background: var(--surface-2); border: 1px solid var(--border);
+                border-radius: 999px; padding: 3px 10px; text-decoration: none; }
+  #guide-chip:hover { color: var(--text); }
+  #lab-chip { margin-top: 8px; margin-left: 4px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 500;
+              color: var(--muted); background: var(--surface-2); border: 1px solid var(--border);
+              border-radius: 999px; padding: 3px 10px; text-decoration: none; }
+  #lab-chip:hover { color: var(--text); }
+  .tabs { display: flex; gap: 2px; padding: 0 10px; border-bottom: 1px solid var(--border); }
+  .tabs button { flex: 1 1 0; min-width: 0; width: auto; margin: 0; padding: 9px 4px 8px; background: transparent; color: var(--muted);
+                 border: 0; border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0; font: inherit;
+                 font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .tabs button:hover { color: var(--text); background: var(--surface-2); }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  .tabs .num { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-right: 4px; border-radius: 50%;
+               font-size: 11px; background: var(--surface-3); color: var(--muted); }
+  .tabs button[aria-selected="true"] .num { background: var(--accent); color: var(--accent-ink); }
+  .tabs .badge { color: var(--good); margin-left: 3px; font-size: 12px; }
+  .panels { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px 16px 18px;
+            scrollbar-gutter: stable; }
+  .tabpanel[hidden] { display: none; }
+  .lead { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  h2 { font-size: 16px; margin: 20px 0 8px; font-weight: 650; }
+  h2:first-child, .lead + h2 { margin-top: 0; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .side-foot { padding: 7px 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+
+  /* ---- controls ---- */
+  label { display: flex; align-items: center; gap: 9px; margin: 7px 0; cursor: pointer; }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; flex: none; }
+  label:has(> input[type=checkbox]:disabled) { color: var(--muted); cursor: default; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
+  input[type=number], select { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-strong);
+                               border-radius: 6px; padding: 5px 7px; font: inherit; font-size: 13px; }
+  input[type=number] { width: 84px; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=number]:hover, select:hover { border-color: rgba(255, 255, 255, 0.5); }
+  .hint { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+  button.link { width: auto; margin: 0; padding: 0; background: none; color: var(--accent); font-weight: 600;
+                text-decoration: underline; text-underline-offset: 2px; }
+  .habitat-row { display: flex; align-items: center; gap: 10px; margin: 4px 0 2px; }
+  .habitat-row #habitat-text { flex: 1; font-variant-numeric: tabular-nums; }
+  label.toggle.inline { margin: 0; padding: 6px 12px; }
+  .stale { margin-top: 12px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--warn);
+           background: rgba(242, 201, 76, 0.1); font-size: 13px; }
+  #plan-info.stale-dim, #plan-radio.stale-dim, #plan-departure.stale-dim { opacity: 0.75; }
+  #plan-info.stale-dim::before { content: "OUT OF DATE"; display: inline-block; margin-bottom: 6px; padding: 2px 8px;
+                                 border-radius: 999px; border: 1px solid var(--warn); color: var(--warn);
+                                 font-size: 12px; font-weight: 750; letter-spacing: 0.04em; }
+  .walk-status { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 12px 14px; margin: 0 0 14px;
+                 border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
+  .walk-status .k { color: var(--muted); font-size: 12px; }
+  .walk-status .v { font-size: 26px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .walk-status .v small { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .walk-status[hidden] { display: none; }
+  .walk-status .meter { grid-column: 1 / -1; height: 6px; }
+  .walk-status .meter i.low { background: var(--warn); }
+  .walk-status .meter.out { background: repeating-linear-gradient(135deg, rgba(255, 90, 79, 0.55) 0 4px, transparent 4px 8px); }
+  .walk-status .state { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .walk-status .state { align-items: center; }
+  .walk-status .state b { font-weight: 750; letter-spacing: 0.04em; color: var(--good); font-size: 16px;
+                          padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .walk-status .state b.low { color: var(--warn); } .walk-status .state b.out { color: var(--bad); }
+  .walk-status .where { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; }
+  .walk-status.bad { border-color: rgba(255, 90, 79, 0.6); }
+  .field { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin: 7px 0; }
+  .field .unit { color: var(--muted); font-size: 12px; width: 30px; }
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .note { color: var(--muted); font-size: 12px; margin: 4px 0 0 25px; }
+  .warn { color: var(--warn); font-size: 12.5px; margin-top: 4px; }
+  .sub { margin-left: 25px; }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+  button { width: 100%; padding: 9px 12px; margin-top: 6px; border: 0; border-radius: 8px; background: var(--accent);
+           color: var(--accent-ink); font: inherit; font-weight: 650; cursor: pointer; }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { opacity: 0.6; cursor: progress; }
+  button.secondary { background: var(--surface-3); color: var(--text); font-weight: 550; }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-row > * { flex: 1 1 auto; width: auto; margin: 0; text-align: center; }
+  a.btn { display: inline-block; padding: 8px 10px; border-radius: 8px; background: var(--surface-3); color: var(--text);
+          text-decoration: none; font-weight: 550; font-size: 13px; }
+  a.btn:hover { filter: brightness(1.15); }
+  /* A map-click mode is a toggle button: the checkbox keeps the state, the label is the button. */
+  label.toggle { justify-content: center; margin: 6px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--surface-3);
+                 border: 1px solid transparent; font-weight: 550; font-size: 13px; }
+  label.toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  label.toggle:has(input:checked) { background: rgba(255, 122, 69, 0.16); border-color: var(--accent); color: var(--accent); }
+  label.toggle:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .empty { color: var(--muted); font-size: 13px; background: var(--surface-2); border: 1px dashed var(--border);
+           border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
+
+  /* ---- legends inside the sidebar ---- */
+  /* slope: the same colours and stops (0, 15, 30, 45 deg) as SLOPE_RAMP in src/gis/tiles.py */
+  .legend { height: 10px; border-radius: 3px; margin: 6px 0 2px;
+            background: linear-gradient(90deg, #1a9850 0%, #fee08b 33.3%, #f46d43 66.7%, #a50026 100%); }
+  .legend.cost { background: linear-gradient(90deg, #000004, #3b0f70, #8c2981, #de4968, #fe9f6d, #fcfdbf); }
+  .rock-key { display: flex; align-items: center; gap: 6px; margin: 6px 0 4px; }
+  .rock-key i { flex: none; border-radius: 50%; background: rgb(232, 236, 255); border: 1px solid #0a0c10; }
+  .lg i.rock { width: 9px; height: 9px; border: 1px solid #0a0c10; border-radius: 50%; background: rgb(232, 236, 255); margin: 0 6.5px; }
+  .ticks { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: rgb(230, 40, 40);
+            margin-right: 4px; vertical-align: -1px; }
+
+  /* ---- stations ---- */
+  .grid { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px 8px; align-items: center; margin: 6px 0; }
+  .grid input[type=number] { width: 60px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #111; }
+  .st-head, .st-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 58px 26px 22px; gap: 6px; align-items: center; }
+  .st-head { color: var(--muted); font-size: 12px; margin: 8px 0 2px; }
+  .st-row { margin: 4px 0; font-size: 13px; }
+  .st-row select, .st-row input[type=number] { width: 100%; min-width: 0; padding: 4px 5px; }
+  .st-row .score { text-align: right; font-variant-numeric: tabular-nums; }
+  .st-row button { width: auto; padding: 2px 4px; margin: 0; background: transparent; color: var(--muted); font-weight: 400; }
+  .st-row button:hover { color: var(--bad); }
+  /* The rover photo nearest to a station, on its own line under the row. */
+  .st-row .st-photo { grid-column: 1 / -1; justify-self: start; margin: -3px 0 2px 50px; font-size: 12px; color: var(--muted);
+                      text-align: left; line-height: 1.35; }
+  .st-row button.st-photo { padding: 0; text-decoration: underline dotted; text-underline-offset: 2px; }
+  .st-row button.st-photo:hover { color: var(--accent); filter: none; }
+  /* Save and Next stay in reach however long the list is. */
+  .sticky-actions { position: sticky; bottom: -18px; margin: 10px -16px -18px; padding: 8px 16px 14px; background: var(--surface);
+                    border-top: 1px solid var(--border); }
+  .sticky-actions .btn-row { margin-top: 0; }
+
+  /* ---- plan result ---- */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px;
+          font-weight: 600; }
+  .chip.ok { background: rgba(61, 220, 132, 0.14); color: var(--good); }
+  .chip.bad { background: rgba(255, 90, 79, 0.16); color: var(--bad); }
+  .chip.info { background: var(--surface-3); color: var(--muted); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; margin: 12px 0 10px; }
+  .stat .k { color: var(--muted); font-size: 12px; }
+  .stat .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .stat .v small { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .meter { height: 5px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin-top: 4px; }
+  .meter i { display: block; height: 100%; border-radius: 3px; background: var(--good); }
+  .meter i.tight { background: var(--warn); }
+  .stat .meter i { background: #9aa6b5; } .stat .meter i.over { background: var(--bad); }
+  details.inputs > summary { cursor: pointer; font-size: 14px; font-weight: 650; margin: 0 0 6px; }
+  details.inputs > summary .muted { font-weight: 400; margin-left: 4px; }
+  details.inputs[open] > summary .muted { display: none; }
+  .skip { position: absolute; left: 12px; top: -60px; z-index: 10; padding: 8px 12px; border-radius: 8px;
+          background: var(--accent); color: var(--accent-ink); font-weight: 650; text-decoration: none; }
+  .skip:focus { top: 10px; }
+  button.busy { opacity: 0.6; cursor: progress; }
+  svg[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .order { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 6px 0; }
+  .order .stop { padding: 1px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border);
+                 font-size: 12.5px; font-weight: 600; }
+  .order .sep { color: var(--muted); font-size: 12px; }
+  details.more { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  details.more summary, details.section > summary { cursor: pointer; }
+  details.section { border-top: 1px solid var(--border); padding: 10px 0 4px; }
+  details.section:first-of-type { border-top: 0; padding-top: 0; }
+  details.section > summary { font-size: 14px; font-weight: 650; color: var(--text); margin-bottom: 6px; }
+  details.section > summary small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  #plan-radio, #plan-departure { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); font-size: 12.5px; }
+  #plan-radio:empty, #plan-departure:empty { display: none; }
+
+  /* ---- route profile ---- */
+  .budget { display: flex; height: 14px; border-radius: 4px; overflow: hidden; gap: 2px; background: var(--surface-2);
+            margin: 6px 0 2px; }
+  .budget div { height: 100%; }
+  .seg-used { background: #8a94a3; } .seg-rv { background: #f2a33a; } .seg-free { background: #4c9be8; }
+  .keyrow { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .keyrow i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 3px; }
+  .player { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+  .player button { width: auto; margin: 0; padding: 6px 14px; white-space: nowrap; flex: none; }
+  .wb-line { display: flex; gap: 6px; margin: 3px 0; font-size: 13px; }
+  .wb-line.ok { color: var(--good); } .wb-line.bad { color: var(--bad); }
+  .callout { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); font-size: 12.5px;
+             color: var(--muted); }
+  .callout b { color: var(--bad); }
+
+  /* ---- charts (context tab) ---- */
+  #rad-chart, #wx-chart { display: block; margin: 6px 0 2px; overflow: visible; }
+  #rad-chart .axis, #wx-chart .axis { stroke: rgba(255,255,255,0.25); stroke-width: 1; }
+  #rad-chart .tick, #wx-chart .tick, #min-map .tick { fill: var(--muted); font-size: 10px; }
+  #rad-chart .line { fill: none; stroke: #8ab4f8; stroke-width: 2; stroke-linejoin: round; }
+  #rad-chart .cross, #wx-chart .cross { stroke: rgba(255,255,255,0.5); stroke-width: 1; }
+  #rad-tip, #wx-tip, #min-tip { font-size: 12px; color: var(--text); min-height: 16px; }
+  #wx-chart .hi { fill: none; stroke: #c97a1a; stroke-width: 2; stroke-linejoin: round; }
+  #wx-chart .lo { fill: none; stroke: #5b8fde; stroke-width: 2; stroke-linejoin: round; }
+  #wx-chart .lab { font-size: 10px; fill: var(--muted); }
+  #wx-chart .sel { stroke: var(--text); stroke-width: 1; stroke-dasharray: 2 2; }
+  #min-map { display: block; margin: 6px auto 2px; overflow: visible; }
+  #min-map .ring { fill: none; stroke: rgba(255,255,255,0.18); stroke-width: 1; stroke-dasharray: 2 3; }
+  #min-map .rim { fill: none; stroke: rgba(255,255,255,0.45); stroke-width: 1.5; }
+  #min-map circle.pt { stroke: #141a21; stroke-width: 2; cursor: default; }
+  .min-key { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+  .min-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; }
+  .alert { margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 90, 79, 0.14);
+           border: 1px solid rgba(255, 90, 79, 0.55); font-size: 12.5px; }
+  .alert b { color: #ff7d73; }
+  #sources ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; }
+  #sources li { margin: 3px 0; }
+  #sources summary b { color: var(--accent); }
+
+  /* ---- map stage ---- */
+  #stage { position: relative; min-width: 0; min-height: 0; height: 100vh; }
+  #map { position: absolute; inset: 0; }
+  .float { position: absolute; background: rgba(16, 20, 26, 0.92); border: 1px solid var(--border); border-radius: 8px; }
+  #map:focus-visible { outline: 3px solid var(--accent) !important; outline-offset: -3px; }
+  #storm-banner { top: 14px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 28px)); padding: 10px 12px;
+                  border: 2px solid #ffb020; background: rgba(32, 24, 6, 0.96); font-size: 13px; display: grid;
+                  grid-template-columns: 1fr auto; gap: 4px 12px; align-items: start; }
+  #storm-banner[hidden] { display: none; }
+  #storm-banner b.t { color: #ffc24d; font-size: 14px; }
+  #storm-banner button { width: auto; margin: 0; padding: 6px 12px; background: var(--surface-3); color: var(--text); }
+  #storm-banner:not([hidden]) ~ #mode-banner { top: 96px; }
+  #map-tools { top: 14px; right: 14px; display: flex; gap: 4px; padding: 4px; }
+  #map-tools button { width: auto; margin: 0; padding: 6px 10px; font-size: 12.5px; font-weight: 600;
+                      background: transparent; color: var(--text); }
+  #map-tools button:hover { background: var(--surface-3); }
+  #mode-banner { top: 14px; left: 50%; transform: translateX(-50%); padding: 8px 14px; font-weight: 600; font-size: 13px;
+                 border-color: var(--accent); color: var(--text); max-width: calc(100% - 28px); }
+  #mode-banner kbd { font: inherit; font-size: 11.5px; color: var(--muted); border: 1px solid var(--border);
+                     border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+  #legend { left: 14px; bottom: 14px; padding: 8px 12px; font-size: 12px; max-width: 244px;
+            max-height: calc(100% - 90px); overflow-y: auto; }
+  .lg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; }
+  .lg.muted { font-size: 12px; color: var(--muted); }
+  #legend summary { cursor: pointer; font-weight: 650; list-style: none; }
+  #legend summary::-webkit-details-marker { display: none; }
+  #legend summary::after { content: " ▾"; color: var(--muted); }
+  #legend:not([open]) summary::after { content: " ▸"; }
+  #legend-items { margin-top: 6px; display: grid; gap: 4px; }
+  .lg { display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .lg i { flex: none; width: 22px; height: 0; border-top: 3px solid; }
+  .lg i.dotk { width: 11px; height: 11px; border: 1px solid #111; border-radius: 50%; margin: 0 5.5px; }
+  .lg i.fill { height: 10px; border: 0; border-radius: 2px; }
+  .lg i.thin { border-top-width: 1.5px; }
+  .lg i.hatch { height: 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 2px; background: var(--hatch); }
+  #readout { right: 14px; bottom: 14px; padding: 5px 10px; font-size: 12px; color: var(--muted);
+             font-variant-numeric: tabular-nums; }
+  /* Rover photo card: right side, under the map tools and above the readout. */
+  #photo-card { top: 62px; right: 14px; width: min(340px, calc(100% - 28px)); max-height: calc(100% - 118px);
+                overflow-y: auto; padding: 10px 12px 12px; font-size: 12.5px; }
+  #storm-banner:not([hidden]) ~ #photo-card { top: 150px; max-height: calc(100% - 206px); }
+  .pc-head { display: flex; align-items: flex-start; gap: 8px; }
+  .pc-head h2 { flex: 1; margin: 0; font-size: 14px; }
+  #photo-close { width: auto; margin: -4px -6px 0 0; padding: 4px 6px; background: transparent; color: var(--muted); }
+  #photo-close:hover { color: var(--text); }
+  .pc-views { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+  .pc-views button { width: auto; margin: 0; padding: 3px 4px; display: flex; flex-direction: column; align-items: center;
+                     gap: 2px; font-size: 11.5px; border: 1px solid transparent; }
+  .pc-views button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .pc-views img { display: block; width: 56px; height: 42px; object-fit: cover; border-radius: 4px; }
+  /* A fixed height keeps the card's size known when it opens (the map pans by it). */
+  .pc-img { display: block; width: 100%; height: 200px; object-fit: contain; border-radius: 6px; background: var(--surface-2); }
+  .pc-missing { padding: 24px 10px; text-align: center; color: var(--muted); background: var(--surface-2); border-radius: 6px; }
+  .pc-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; margin: 8px 0; }
+  .pc-facts dt { color: var(--muted); }
+  .pc-facts dd { margin: 0; overflow-wrap: anywhere; }
+  .pc-facts:empty, #photo-actions:empty { display: none; }
+  .pc-note { margin: 8px 0 0; }
+  @media (max-width: 600px) {                 /* phones: the card spans the map, so it stays short */
+    #photo-card { top: 58px; max-height: 55%; }
+    .pc-img { height: 140px; }
+    .pc-views button { padding: 2px 3px; font-size: 11px; }
+    .pc-views img { width: 40px; height: 30px; }
+    /* With the storm banner (about 120 px tall here): the card sits at the bottom of the map
+       so the warning stays readable; the rest of the card scrolls. */
+    #storm-banner:not([hidden]) ~ #photo-card { top: auto; bottom: 8px; max-height: calc(100% - 150px); }
+  }
+
+  @media (pointer: coarse) {                  /* touch: 44 px targets (Apple HIG, WCAG 2.5.5) */
+    button, select, .btn, .tabs [role="tab"], input[type="number"] { min-height: 44px; }
+    label:has(> input[type="checkbox"]) { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+    input[type="checkbox"] { width: 22px; height: 22px; flex: none; }
+    input[type="range"] { min-height: 32px; }
+    .st-row button { min-width: 44px; }
+  }
+  @media (max-width: 860px) {
+    body { grid-template-columns: 1fr; grid-template-rows: 46vh minmax(0, 1fr); }
+    #stage { height: 46vh; order: -1; }
+    #side { height: auto; border-right: 0; border-top: 1px solid var(--border); }
+    #readout { display: none; }
+  }
+</style>
+</head>
+<body>
+<aside id="side">
+  <a class="skip" href="#map">Skip to the map</a>
+  <div class="side-head">
+    <h1>Mars EVA Planner <span>· Gale boxwork</span></h1>
+    <div class="tagline">Choose science stations, set the limits, get a walk whose way back is checked at every step.</div>
+    <button id="sources-chip" type="button" title="Which data the planner combines">Data sources</button>
+    <a id="guide-chip" href="/docs/user_guide/" target="_blank" rel="noopener" title="Every button of the planner explained, with screenshots">User guide ›</a>
+    <a id="lab-chip" href="/lab.html" target="_blank" rel="noopener" title="Compare the six route solvers (DP, CP-SAT, ILS, SA, ACO, GA) on the same stations">Lab ›</a>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Planning steps">
+    <button role="tab" id="tab-terrain" data-tab="terrain" aria-controls="panel-terrain" aria-selected="true" tabindex="0"><span class="num" aria-hidden="true">1</span> Terrain</button>
+    <button role="tab" id="tab-stations" data-tab="stations" aria-controls="panel-stations" aria-selected="false" tabindex="-1"><span class="num" aria-hidden="true">2</span> Stations</button>
+    <button role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan" aria-selected="false" tabindex="-1"><span class="num" aria-hidden="true">3</span> Plan<span class="badge" id="plan-badge"></span></button>
+    <button role="tab" id="tab-walk" data-tab="walk" aria-controls="panel-walk" aria-selected="false" tabindex="-1"><span class="num" aria-hidden="true">4</span> Walk</button>
+    <button role="tab" id="tab-context" data-tab="context" aria-controls="panel-context" aria-selected="false" tabindex="-1">Context</button>
+  </div>
+
+  <div class="panels">
+    <!-- 1 · Terrain -->
+    <section class="tabpanel" id="panel-terrain" role="tabpanel" aria-labelledby="tab-terrain">
+      <p class="lead">Look at the ground first: what is steep, where the sand is, and which cells nobody should cross.</p>
+      <h2>Base map</h2>
+      <label><input type="checkbox" id="show-ortho" checked> Photo from orbit <small class="muted">HiRISE, 25 cm</small></label>
+      <label><input type="checkbox" id="show-hillshade"> Shaded relief</label>
+      <label><input type="checkbox" id="show-slope" checked> Slope</label>
+      <div class="sub">
+        <input type="range" id="slope-opacity" min="0" max="1" step="0.05" value="0.5" aria-label="Slope opacity">
+        <div class="legend"></div>
+        <div class="ticks"><span>0°</span><span>15°</span><span>30°</span><span>45°+</span></div>
+      </div>
+      <h2>Hazards and cost</h2>
+      <label><input type="checkbox" id="block-on" checked>
+        <span><span class="swatch" style="background: var(--hatch); border: 1px solid rgba(255,255,255,.3)"></span>Never cross cells steeper than <b id="block-value">30</b>°</span></label>
+      <div class="sub">
+        <input type="range" id="block-slope" min="15" max="60" step="1" value="30" aria-label="Steepest cell allowed, in degrees">
+        <div class="muted" id="block-info"></div>
+      </div>
+      <label title="E8: sand detected on the orbital photo by a neural network"><input type="checkbox" id="show-sand"> Sand detected</label>
+      <div id="sand-legend" class="note" hidden>
+        <div class="legend" style="background: linear-gradient(90deg, rgba(250,246,235,0), rgb(250,246,235))"></div>
+        <div class="ticks"><span>0</span><span>sand fraction per 1 m cell</span><span>1</span></div>
+        A cautious detector: when it marks sand it is right about 92 % of the time, but it misses a lot of sand.
+      </div>
+      <label title="E9: boulders found on the orbital photo by a neural network (BoulderNet, distilled)"><input type="checkbox" id="show-rocks"> Boulders</label>
+      <div id="rocks-legend" class="note" hidden>
+        <div class="rock-key"><i style="width:4px;height:4px"></i><i style="width:7px;height:7px"></i><i style="width:10px;height:10px"></i>
+          <span>bigger dot, more of the 10 m square under boulders (largest: 10 % or more)</span></div>
+        <span id="rocks-note">Boulders larger than about 1 m. Shown for context: the route cost does not use them.</span>
+      </div>
+      <label title="E3: energy to cross each 1 m cell (Santee 2001, Mars gravity)"><input type="checkbox" id="show-cost"> Walking cost</label>
+      <div id="cost-legend" class="note" hidden>
+        <div class="legend cost"></div>
+        <div class="ticks"><span id="cost-min"></span><span>Wh per 1 m cell</span><span id="cost-max"></span></div>
+      </div>
+      <h2>More layers</h2>
+      <label title="E11: line of sight from the habitat antenna to a suit radio"><input type="checkbox" id="show-radio"> Radio coverage</label>
+      <div id="radio-legend" class="note" hidden>
+        <span class="swatch" style="background: rgba(42,120,214,0.7)"></span>the habitat antenna is in sight ·
+        <span class="swatch" style="background: rgb(255,64,200)"></span>route with no direct radio.
+        <span id="radio-note">Line of sight on the 1 m terrain model (cautious).</span>
+      </div>
+      <label title="THEMIS night infrared, Mars Odyssey, 81 m pixels"><input type="checkbox" id="show-thermal"> Night temperature <small class="muted">81 m pixels</small></label>
+      <div id="thermal-legend" class="note" hidden>
+        <div class="legend" style="background: linear-gradient(90deg, #2b0a56, #6e186e, #af315b, #e55b30, #fba007, #f1ee74)"></div>
+        <div class="ticks"><span>cooler at night</span><span>holds heat (rock)</span></div>
+        <span id="thermal-note">Mars Odyssey, 81 m pixels: context, not a cost.</span>
+      </div>
+      <label title="Navcam photos Curiosity took on the ground, at the place it took them"><input type="checkbox" id="show-photos"> Rover photos</label>
+      <div id="photos-note" class="note" hidden></div>
+      <button class="next" data-go="stations">Next: choose stations <span class="arrow"></span></button>
+    </section>
+
+    <!-- 2 · Stations -->
+    <section class="tabpanel" id="panel-stations" role="tabpanel" aria-labelledby="tab-stations" hidden>
+      <p class="lead">Mark the places worth visiting. Each type has a science value; the planner visits as much value as fits.</p>
+      <h2>Add a station</h2>
+      <div class="field" style="grid-template-columns: auto 1fr"><span class="muted">Type</span><select id="new-type" aria-label="Type of the station to add"></select></div>
+      <label class="toggle"><input type="checkbox" id="add-mode" class="click-mode"> ＋ Add stations by clicking the map</label>
+      <div class="btn-row">
+        <button id="load-candidates" class="secondary" title="Curiosity's real drill sites plus candidates picked from relief and tone">Load Curiosity sites</button>
+      </div>
+      <div class="btn-row" id="lab-row" hidden>
+        <select id="lab-dataset" aria-label="Lab dataset to load" title="Station sets of the metaheuristics lab: one per experiment case, or the full pool"></select>
+        <button id="load-lab" class="secondary" title="Replace the list with a lab dataset, then plan it with any route solver (Plan tab, More options)">Load lab dataset</button>
+      </div>
+      <div id="lab-notice" class="warn" hidden role="status" style="margin-top:6px"></div>
+      <details class="more" id="stations-advanced">
+        <summary>Advanced: science values and AI-found sites</summary>
+        <div class="btn-row"><button id="load-e8" class="secondary" title="E8: rock outcrops next to sand patches, found automatically on the photo">Load AI-found sites</button></div>
+        <h2>Science value by type <small>edit to change the plan</small></h2>
+        <div id="rubric" class="grid"></div>
+      </details>
+      <h2>Stations <small id="station-count"></small></h2>
+      <div class="st-head"><span>Id</span><span>Type</span><span title="Minutes of work at the station">Work (min)</span><span title="Science value, from the type">Value</span><span></span></div>
+      <div id="station-list"></div>
+      <div class="hint">A "?" after an id marks a rough position. Hover an id for where it comes from.</div>
+      <div id="stations-msg" class="muted" style="margin-top:6px" role="status"></div>
+      <div class="sticky-actions">
+        <div id="unsaved" class="warn" hidden style="margin:0 0 6px">Not saved yet. Plans already use this list; Save keeps it for next time.</div>
+        <div class="btn-row">
+          <button id="save-stations" class="secondary">Save stations</button>
+          <button class="next" data-go="plan">Next: plan the walk <span class="arrow"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Plan -->
+    <section class="tabpanel" id="panel-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+      <p class="lead">Set what the walk may spend. The planner picks the stations that fit and the order to visit them.</p>
+      <details class="inputs" id="plan-inputs" open>
+      <summary>Habitat and limits <span class="muted" id="inputs-summary"></span></summary>
+      <h2>Habitat <small>where the walk starts and ends</small></h2>
+      <div class="habitat-row">
+        <span id="habitat-text">Centre of the area</span>
+        <label class="toggle inline"><input type="checkbox" id="base-mode" class="click-mode"> Set on the map</label>
+      </div>
+      <button id="habitat-reset" class="link" hidden>Back to the centre</button>
+      <h2>Limits</h2>
+      <div class="field"><span>EVA length</span><input type="number" id="max-min" aria-label="EVA length, minutes" min="15" max="480" step="5" value="120" required><span class="unit">min</span></div>
+      <div class="field"><span>Energy budget</span><input type="number" id="budget-wh" aria-label="Energy budget, Wh" min="50" max="2800" step="50" value="1000" required><span class="unit">Wh</span></div>
+      <div class="field"><span>Reserve kept unused</span><input type="number" id="margin-pct" aria-label="Reserve kept unused, percent" min="0" max="90" step="5" value="10"><span class="unit">%</span></div>
+      <div class="hint">Wh: suit energy (a full suit ≈ 2,800). Enter plans.</div>
+      <details class="more">
+        <summary>More options</summary>
+        <div class="field"><span>Oxygen budget <small class="muted">(0 = no limit)</small></span><input type="number" id="o2-l" aria-label="Oxygen budget, litres (0 = no limit)" min="0" max="5000" step="10" value="0"><span class="unit">L</span></div>
+        <label title="E3 energy multiplied by the sand price learned from Curiosity's route (E1)"><input type="checkbox" id="human-cost" checked> Charge extra energy on sand</label>
+        <div class="muted">In this 2 × 2 km area time runs out long before energy does.</div>
+        <div class="field"><label for="solver"><span>Route solver</span></label><select id="solver" title="Which algorithm orders the stations. Auto is exact: DP up to 19 nodes, CP-SAT above.">
+          <option value="auto" selected>Auto (exact: DP / CP-SAT)</option>
+          <option value="dp">Dynamic programming (DP, exact)</option>
+          <option value="cpsat">CP-SAT (exact)</option>
+          <option value="ils">Iterated local search (ILS)</option>
+          <option value="sa">Simulated annealing (SA)</option>
+          <option value="aco">Ant colony (ACO)</option>
+          <option value="ga">Genetic algorithm (GA)</option>
+        </select></div>
+      </details>
+      </details>
+      <button id="plan-btn">Plan the walk</button>
+      <div id="plan-error" class="warn" role="alert"></div>
+      <div id="plan-stale" class="stale" hidden role="status">The limits, stations or habitat changed after this plan.
+        <button id="replan" class="link">Plan again</button> to update it.</div>
+      <div id="plan-info"><div class="empty">No plan yet. Press <b>Plan the walk</b>: the first one takes 10–30 s while the terrain graph is built.</div></div>
+      <div id="plan-radio"></div>
+      <div id="plan-departure"></div>
+    </section>
+
+    <!-- 4 · Walk -->
+    <section class="tabpanel" id="panel-walk" role="tabpanel" aria-labelledby="tab-walk" hidden>
+      <p class="lead">Rehearse the walk and check, at any point, how far the astronaut can still go and get back.</p>
+      <div id="walk-status" class="walk-status" hidden>
+        <div><div class="k">Home in</div><div class="v"><span id="ws-back">–</span> <small>min · limit 30</small></div></div>
+        <div><div class="k">Spare energy</div><div class="v"><span id="ws-spare">–</span> <small>Wh</small></div></div>
+        <div class="state"><span>Margin to the 30 min line</span><b id="ws-word"></b></div>
+        <div class="meter" id="ws-track" role="meter" aria-label="Oxygen margin to the 30 min line" aria-valuemin="0" aria-valuemax="30"><i id="ws-bar"></i></div>
+        <div class="where" id="ws-where"></div>
+      </div>
+      <div id="walk-empty" class="empty">Plan a walk in step 3 to rehearse it here. To check one point now, open <b>Try another point</b> below.</div>
+      <div id="profile" hidden>
+        <h2>Rehearse</h2>
+        <div class="budget" role="img" aria-label="Energy along the route: used, needed to return, spare">
+          <div id="bar-used" class="seg-used"></div><div id="bar-rv" class="seg-rv"></div><div id="bar-free" class="seg-free"></div>
+        </div>
+        <div class="keyrow"><span><i class="seg-used"></i>used</span><span><i class="seg-rv"></i>needed to return</span>
+          <span><i class="seg-free"></i>spare</span></div>
+        <div id="profile-info" class="muted" style="margin-top:6px"></div>
+        <input type="range" id="route-pos" min="0" max="0" value="0" aria-label="Position along the route">
+        <div class="player">
+          <button id="play-btn" class="secondary"></button>
+          <select id="play-speed" aria-label="Playback speed"><option value="30">×30</option><option value="60" selected>×60</option>
+            <option value="180">×180</option></select>
+          <span class="muted">Space plays or pauses.</span>
+        </div>
+        <div class="btn-row">
+          <a class="btn ext" href="/guide.html" target="_blank" title="Turn-by-turn guide for the arm tablet">Tablet</a>
+          <a class="btn ext" href="/3d/" target="_blank" title="Walk the route at eye height">3D</a>
+          <a class="btn ext" href="/card.html" target="_blank" title="Printable step list">Wrist card</a>
+        </div>
+      </div>
+      <h2>Safety on the map</h2>
+      <div class="muted"><span style="color:#ff3b30">━</span> 30 min from the habitat (emergency oxygen) ·
+        the dark shade is out of reach with the energy left</div>
+      <button id="fit-walk" class="secondary" hidden>Show the safety lines</button>
+      <label><input type="checkbox" id="show-radius" checked> Compare with a fixed-distance rule</label>
+      <div id="wb-info"></div>
+      <details class="more" id="probe">
+        <summary>Try another point</summary>
+        <label class="toggle"><input type="checkbox" id="wb-mode" class="click-mode"> Place the astronaut on the map</label>
+        <div class="field"><span>Energy still in the suit</span><input type="number" id="wb-energy" aria-label="Energy still in the suit, Wh" min="0" step="10" value="150"><span class="unit">Wh</span></div>
+      </details>
+    </section>
+
+    <!-- Context -->
+    <section class="tabpanel" id="panel-context" role="tabpanel" aria-labelledby="tab-context" hidden>
+      <p class="lead">Conditions around the walk. They inform the decision; they are not part of the route cost.</p>
+      <details class="section" open>
+        <summary>Radiation <small>dose over the walk, not a map</small></summary>
+        <div id="rad-summary" class="muted"></div>
+        <div class="muted" style="margin-top:6px">Accumulated dose over a sample walk (µGy)</div>
+        <svg id="rad-chart" width="226" height="86" role="img" aria-label="Accumulated dose against EVA time"></svg>
+        <div id="rad-tip"></div>
+        <select id="sep-scenario" style="width:100%;margin-top:4px" aria-label="Solar storm scenario"></select>
+        <button id="sep-btn" class="secondary">Simulate a solar storm</button>
+        <div id="sep-info"></div>
+      </details>
+      <details class="section" open>
+        <summary>Weather on the day <small>one value per sol</small></summary>
+        <div class="field"><span>Sol of the walk</span><input type="number" id="wx-sol" aria-label="Sol of the walk" min="1" step="1" value="4711"><span class="unit"></span></div>
+        <div id="wx-summary" class="muted"></div>
+        <div class="muted" style="margin-top:6px">Air temperature while Curiosity explored the boxwork (°C)</div>
+        <svg id="wx-chart" width="226" height="96" role="img" aria-label="Daily maximum and minimum air temperature over the boxwork campaign sols"></svg>
+        <div id="wx-tip"></div>
+      </details>
+      <details class="section">
+        <summary>Minerals seen from orbit <small>within 100 km</small></summary>
+        <svg id="min-map" width="200" height="200" role="img" aria-label="Orbital mineral detections within 100 km of the study box"></svg>
+        <div id="min-key" class="min-key"></div>
+        <div id="min-tip"></div>
+        <div id="min-summary" class="muted"></div>
+      </details>
+      <details class="section" id="sources">
+        <summary>Data sources…</summary>
+        <ul id="sources-list"></ul>
+      </details>
+    </section>
+  </div>
+  <div class="side-foot" id="status">Loading layers…</div>
+</aside>
+
+<main id="stage">
+  <div id="map" tabindex="0" role="application"
+       aria-label="Map of the study area. When a placing mode is on, arrow keys move the crosshair and Enter places."></div>
+  <div id="map-tools" class="float">
+    <button id="fit-plan" hidden title="Zoom to the planned walk">Fit plan</button>
+    <button id="fit-all" title="Show the whole study area">Whole area</button>
+  </div>
+  <div id="storm-banner" class="float" hidden role="alert">
+    <div><b class="t">Solar storm · return to the habitat now</b><div id="storm-text"></div></div>
+    <button id="storm-dismiss" type="button">Dismiss</button>
+  </div>
+  <div id="mode-banner" class="float" hidden role="status"></div>
+  <section id="photo-card" class="float" hidden aria-labelledby="photo-title" tabindex="-1">
+    <div class="pc-head">
+      <h2 id="photo-title"></h2>
+      <button id="photo-close" type="button" aria-label="Close photo" title="Close (Esc)"></button>
+    </div>
+    <div id="photo-views" class="pc-views" role="group" aria-label="Views of this stop"></div>
+    <div id="photo-media"></div>
+    <dl id="photo-facts" class="pc-facts"></dl>
+    <div id="photo-actions"></div>
+    <p class="muted pc-note">Photos show the view, not a promise that a station is visible.</p>
+  </section>
+  <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
+  <details id="legend" class="float" open>
+    <summary>On the map</summary>
+    <div id="legend-items"></div>
+  </details>
+  <div id="readout" class="float">Move the cursor over the map</div>
+</main>
+
+<script src="/terms.js"></script>
+<script>
+// ---------------------------------------------------------------------------
+// Coordinate system (guide sections 31 and 37)
+// The backend speaks metres in the DEM's Mars equirectangular CRS. deck.gl's
+// OrthographicView is a plain plane, so we define "world units" for it:
+//   1 world unit = S metres, with S = tile_z0_m / 256 (= 8 m).
+// With that scale a 256-px tile at deck zoom z covers exactly the same ground
+// as the tile (z, x, y) produced by gdal2tiles --profile=raster --xyz, so tile
+// indices match without any offset. World y grows southwards (flipY), like
+// raster rows and XYZ tiles.
+// ---------------------------------------------------------------------------
+const {Deck, OrthographicView, TileLayer, BitmapLayer, PathLayer, ScatterplotLayer, TextLayer, PolygonLayer} = deck;
+
+// One small stroked icon set (24 px grid, currentColor) instead of Unicode glyphs.
+const ICONS = {
+  play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.3"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  ext: '<path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5"/>',
+  photo: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+};
+const icon = (name, label = "") => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ` +
+  `stroke-linecap="round" stroke-linejoin="round" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${ICONS[name]}</svg>`;
+// Screen-reader announcements wait their turn instead of overwriting each other.
+const announceQ = []; let announceBusy = false;
+function announce(text) {
+  announceQ.push(text);
+  if (announceBusy) return;
+  const el = document.getElementById("sr-status");
+  const next = () => {
+    if (!announceQ.length) { announceBusy = false; return; }
+    announceBusy = true; el.textContent = "";
+    setTimeout(() => { el.textContent = announceQ.shift(); setTimeout(next, 1600); }, 50);
+  };
+  next();
+}
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MAP_FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';     // map labels in the interface's face
+
+let S, X0, Y0, SIZE_M;
+const toWorld = (x, y) => [(x - X0) / S, (Y0 - y) / S];       // Mars metres -> world
+const toMars  = (wx, wy) => [X0 + wx * S, Y0 - wy * S];       // world -> Mars metres
+
+function tileLayer(id, url, maxZoom, visible, opacity = 1) {
+  return new TileLayer({
+    id, visible, opacity,
+    data: url,
+    minZoom: 0,
+    maxZoom,                                  // above it deck.gl magnifies the last level
+    tileSize: 256,
+    extent: [0, 0, SIZE_M / S, SIZE_M / S],   // do not request tiles outside the bbox
+    renderSubLayers: props => {
+      const {left, bottom, right, top} = props.tile.bbox;
+      return new BitmapLayer(props, {data: null, image: props.data,
+                                     bounds: [left, bottom, right, top]});
+    },
+  });
+}
+
+const ui = id => document.getElementById(id);
+let deckgl, tiles, planFC = null;
+
+// Whole-box overlays: one PNG covering the 2 x 2 km box (no tiles needed).
+const boxBounds = () => [0, SIZE_M / S, SIZE_M / S, 0];        // [left, bottom, right, top]
+const blockLimit = () => ui("block-on").checked ? Number(ui("block-slope").value) : null;
+
+function overlayLayers() {
+  const out = [];
+  if (ui("show-sand").checked) {
+    out.push(new BitmapLayer({id: "sand", image: "/layers/sand.png", bounds: boxBounds()}));
+  }
+  if (ui("show-rocks").checked) {
+    out.push(new BitmapLayer({id: "rocks", image: "/layers/rocks.png", bounds: boxBounds()}));
+  }
+  if (ui("show-radio").checked) {
+    const h = radioHabitat();
+    out.push(new BitmapLayer({id: "radio", bounds: boxBounds(),
+                              image: `/layers/comms.png?x=${h[0].toFixed(1)}&y=${h[1].toFixed(1)}`}));
+  }
+  if (ui("show-thermal").checked) {
+    out.push(new BitmapLayer({id: "thermal", image: "/layers/thermal.png", bounds: boxBounds(),
+                              opacity: Math.pow(0.8, 2.2)}));
+  }
+  if (ui("show-cost").checked) {
+    out.push(new BitmapLayer({id: "cost", image: "/layers/cost.png", bounds: boxBounds(),
+                              opacity: Math.pow(0.75, 2.2)}));
+  }
+  if (blockLimit() !== null && blockedImg) {
+    out.push(new BitmapLayer({id: "blocked", image: blockedImg, bounds: boxBounds()}));
+  }
+  return out;
+}
+
+// The block mask is one 2000 x 2000 PNG per slope limit. Handing deck.gl a new URL on every
+// slider step started dozens of image loads at once, and while deck.gl swapped the texture it
+// drew the layer with another one: a slope tile flashed, stretched over the whole map. So the
+// HUD loads the mask itself: only once the slider pauses, fully decoded, ignoring answers to
+// older requests, and keeps the previous mask on screen until the new one is ready.
+let blockedImg = null, blockedImgLimit = null, blockedSeq = 0, blockedTimer = null;
+function requestBlockedImage(delayMs = 120) {
+  clearTimeout(blockedTimer);
+  const limit = blockLimit();
+  if (limit === null || limit === blockedImgLimit) return;
+  blockedTimer = setTimeout(async () => {
+    const seq = ++blockedSeq;
+    try {
+      const mask = {limit, image: `/layers/blocked.png?max_cell_slope_deg=${limit}`};   // same URL as the 3D view
+      const res = await fetch(mask.image);
+      if (!res.ok) { ui("block-info").textContent = `Error ${res.status} loading the block mask`; return; }
+      const bmp = await createImageBitmap(await res.blob());
+      if (seq !== blockedSeq) { bmp.close(); return; }       // the slider moved on meanwhile
+      blockedImg = bmp; blockedImgLimit = limit; redraw();
+    } catch (err) { console.error(err); }
+  }, delayMs);
+}
+
+let blockInfoSeq = 0;
+async function refreshBlockInfo() {
+  const limit = blockLimit(), seq = ++blockInfoSeq;
+  ui("block-value").textContent = ui("block-slope").value;
+  ui("block-slope").disabled = limit === null;
+  requestBlockedImage(blockedImg ? 120 : 0);
+  if (limit === null) { ui("block-info").textContent = "Off: only single steps steeper than 20° are avoided."; return; }
+  const res = await fetch(`/layers/blocked?max_cell_slope_deg=${limit}`);
+  if (seq !== blockInfoSeq) return;                         // an answer for an older slider value
+  if (!res.ok) { ui("block-info").textContent = `Error ${res.status} loading the block mask`; return; }
+  const r = await res.json();
+  if (seq !== blockInfoSeq) return;
+  ui("block-info").textContent = `${(r.blocked_fraction * 100).toFixed(1)} % of the area is off limits`;
+}
+
+async function showCostLegend() {
+  const on = ui("show-cost").checked;
+  ui("cost-legend").hidden = !on;
+  if (on && !ui("cost-min").textContent) {
+    ui("cost-min").textContent = "loading…";
+    const res = await fetch("/layers/cost");
+    if (!res.ok) { ui("cost-min").textContent = `error ${res.status}`; return; }
+    const L = await res.json();
+    ui("cost-min").textContent = L.vmin.toFixed(3);
+    ui("cost-max").textContent = L.vmax.toFixed(3) + "+";
+  }
+}
+
+// Vector layers from the /plan FeatureCollection (coordinates in Mars metres).
+function planLayers() {
+  if (!planFC) return [];
+  const noRadio = ui("show-radio").checked && radioFC
+    ? radioFC.features.filter(f => f.properties.kind === "no_radio") : [];
+  const byKind = k => planFC.features.filter(f => f.properties.kind === k);
+  const points = byKind("start");                 // stations are drawn from the HUD state
+  const path = f => f.geometry.coordinates.map(([x, y]) => toWorld(x, y));
+  return [
+    // The route is drawn twice: a dark casing so it reads over any terrain colour.
+    new PathLayer({id: "route-casing", data: byKind("route"), getPath: path, getColor: [0, 0, 0, 210],
+                   getWidth: 7, widthUnits: "pixels", capRounded: true, jointRounded: true}),
+    new PathLayer({
+      id: "route", data: byKind("route"), getPath: path,
+      getColor: [0, 200, 255], getWidth: 3.5, widthUnits: "pixels",
+      capRounded: true, jointRounded: true,
+    }),
+    new PathLayer({                                   // E11: stretches with no direct radio
+      id: "no-radio", data: noRadio.flatMap(f => f.geometry.coordinates),
+      getPath: line => line.map(([x, y]) => toWorld(x, y)),
+      getColor: [255, 64, 200], getWidth: 5, widthUnits: "pixels", capRounded: true,
+    }),
+    new ScatterplotLayer({
+      id: "points", data: points,
+      getPosition: f => toWorld(...f.geometry.coordinates),
+      getFillColor: f => f.properties.kind === "start" ? [255, 255, 255] : [255, 122, 69],
+      getLineColor: [17, 17, 17], stroked: true, lineWidthUnits: "pixels", getLineWidth: 1.5,
+      getRadius: 7, radiusUnits: "pixels",
+    }),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Manual science stations (guide section 24): the score of a station is the
+// rubric score of its type, so every value traces back to an editable rule.
+// ---------------------------------------------------------------------------
+const TYPE_COLORS = {ridge: [255, 214, 10], hollow: [64, 160, 255],
+                     contact: [180, 120, 255], curiosity: [0, 220, 140]};
+const TYPE_PREFIX = {ridge: "R", hollow: "H", contact: "C", curiosity: "Q"};
+let rubricMeta = {}, rubric = {}, stations = [];
+
+const scoreOf = s => s.lab_score ?? Number(rubric[s.type] ?? 0);   // lab datasets keep their own score
+const isUnsure = s => s.confidence === "low" || s.confidence === "approximate";
+let dirty = false;
+function markDirty(on = true) { dirty = on; ui("unsaved").hidden = !on; if (on) markPlanStale(); }
+const rgb = t => `rgb(${(TYPE_COLORS[t] || [200, 200, 200]).join(",")})`;
+
+function nextId(type) {
+  const prefix = TYPE_PREFIX[type] || "S";
+  let n = 1;
+  while (stations.some(s => s.id === prefix + n)) n++;
+  return prefix + n;
+}
+
+// Visiting order of the current plan by station id ({} when there is no tour).
+function planOrder() {
+  const out = {};
+  if (planFC) for (const f of planFC.features) {
+    if (f.properties.kind === "station" && f.properties.order) out[f.properties.id] = f.properties.order;
+  }
+  return out;
+}
+
+// Labels that would overlap at the current zoom are hidden: the stations of the plan
+// first (in visiting order), then by science value. They come back when zooming in.
+let viewZoom = 1.5;
+function labelledStations(order) {
+  const px = 2 ** viewZoom, kept = [];
+  const rank = s => (order[s.id] ? order[s.id] : 1000) - scoreOf(s) / 100;
+  for (const s of stations.slice().sort((a, b) => rank(a) - rank(b))) {
+    const [x, y] = toWorld(s.x, s.y).map(v => v * px);
+    // A stop of the plan is never hidden: the walk must be readable at any zoom.
+    if (order[s.id] || kept.every(k => Math.abs(k.x - x) > 44 || Math.abs(k.y - y) > 20)) kept.push({x, y, s});
+  }
+  return kept.map(k => k.s);
+}
+
+function stationLayers() {
+  const order = planOrder(), planned = Object.keys(order).length > 0;
+  const key = JSON.stringify(rubric) + stations.map(s => s.id + s.type).join() + JSON.stringify(order);
+  const inPlan = s => !planned || order[s.id];          // stations the plan leaves out are faded
+  return [
+    new ScatterplotLayer({
+      id: "stations", data: stations,
+      getPosition: s => toWorld(s.x, s.y),
+      getFillColor: s => [...(TYPE_COLORS[s.type] || [200, 200, 200]), inPlan(s) ? 255 : 110],
+      // Stops of the plan get a white ring, so a blue hollow reads apart from the cyan route.
+      getLineColor: s => planned && order[s.id] ? [255, 255, 255] : [17, 17, 17, inPlan(s) ? 255 : 140], stroked: true,
+      lineWidthUnits: "pixels", getLineWidth: s => planned && order[s.id] ? 2.5 : 1.5,
+      getRadius: s => 4 + scoreOf(s), radiusUnits: "pixels",       // size follows the science value
+      updateTriggers: {getRadius: key, getFillColor: key, getLineColor: key, getLineWidth: key, getPosition: key},
+    }),
+    // One label per station: "3. R2" when the plan visits it third.
+    new TextLayer({
+      id: "station-labels", data: labelledStations(order),
+      getPosition: s => toWorld(s.x, s.y),
+      getText: s => `${order[s.id] ? order[s.id] + ". " : ""}${s.id}${isUnsure(s) ? "?" : ""}`,
+      getColor: s => order[s.id] ? [10, 20, 28] : [235, 240, 245, inPlan(s) ? 255 : 170],
+      getSize: 12, getPixelOffset: [0, -19], fontWeight: 700, fontFamily: MAP_FONT,
+      background: true, backgroundPadding: [5, 2],
+      getBackgroundColor: s => order[s.id] ? [0, 200, 255, 240] : [16, 20, 26, inPlan(s) ? 215 : 150],
+      updateTriggers: {getText: key, getPosition: key, getColor: key, getBackgroundColor: key},
+    }),
+  ];
+}
+
+function renderRubric() {
+  ui("rubric").innerHTML = "";
+  for (const [type, meta] of Object.entries(rubricMeta)) {
+    const dot = document.createElement("span");
+    dot.className = "dot"; dot.style.background = rgb(type);
+    const name = document.createElement("span");
+    name.textContent = meta.label; name.title = meta.why;
+    const input = document.createElement("input");
+    Object.assign(input, {type: "number", min: 0, max: 99, step: 1, value: rubric[type] ?? meta.score});
+    input.addEventListener("input", () => {
+      rubric[type] = Math.max(0, Number(input.value) || 0);
+      markDirty(); renderStations(); redraw();
+    });
+    ui("rubric").append(dot, name, input);
+  }
+}
+
+function renderStations() {
+  const list = ui("station-list");
+  list.innerHTML = stations.length ? "" :
+    '<div class="empty">No stations yet. Turn on <b>Add stations by clicking the map</b> and click a ridge, or load the suggested ones.</div>';
+  ui("station-count").textContent = stations.length ? `${stations.length}` : "";
+  stations.forEach((s, i) => {
+    const row = document.createElement("div");
+    row.className = "st-row";
+    const id = document.createElement("b"); id.textContent = s.id + (isUnsure(s) ? "?" : "");
+    id.style.color = rgb(s.type);
+    id.title = [s.source, s.confidence && `confidence: ${s.confidence}`, s.note].filter(Boolean).join("\n");
+    const type = document.createElement("select");
+    for (const [t, meta] of Object.entries(rubricMeta)) type.add(new Option(meta.label, t, false, t === s.type));
+    type.addEventListener("input", () => { s.type = type.value; markDirty(); renderStations(); redraw(); });
+    const service = document.createElement("input");
+    Object.assign(service, {type: "number", min: 0, step: 1, value: s.service_time_min});
+    service.addEventListener("input", () => { s.service_time_min = Math.max(0, Number(service.value) || 0); markDirty(); });
+    const score = document.createElement("span"); score.textContent = scoreOf(s); score.className = "score";
+    type.setAttribute("aria-label", `Type of ${s.id}`); service.setAttribute("aria-label", `Minutes of work at ${s.id}`);
+    const del = document.createElement("button"); del.innerHTML = icon("close"); del.title = `Remove ${s.id}`;
+    del.setAttribute("aria-label", `Remove ${s.id}`);
+    del.addEventListener("click", () => {
+      const [gone] = stations.splice(i, 1);
+      markDirty(); renderStations(); redraw();
+      ui("stations-msg").innerHTML = `Removed ${esc(gone.id)}. <button class="link" id="undo-del">Undo</button>`;
+      ui("undo-del").addEventListener("click", () => {
+        stations.splice(Math.min(i, stations.length), 0, gone);
+        ui("stations-msg").textContent = `${gone.id} is back.`;
+        markDirty(); renderStations(); redraw();
+      });
+    });
+    row.append(id, type, service, score, del);
+    const photoLine = photoLineFor(s);                  // only once the rover photo catalogue is in
+    if (photoLine) row.append(photoLine);
+    list.append(row);
+  });
+}
+
+function addStationAt(worldCoord) {
+  const [x, y] = toMars(worldCoord[0], worldCoord[1]);
+  if (x < X0 || x > X0 + SIZE_M || y > Y0 || y < Y0 - SIZE_M) return;   // outside the box
+  const type = ui("new-type").value;
+  const id = nextId(type);
+  stations.push({id, type, x, y, service_time_min: 10, note: ""});
+  ui("stations-msg").textContent = `Added ${id}. Click the map again for another, or press Esc to stop.`;
+  markDirty(); renderStations(); redraw();
+}
+
+async function loadStations() {
+  rubricMeta = await (await fetch("/stations/rubric")).json();
+  const saved = await (await fetch("/stations")).json();
+  rubric = saved.rubric;
+  stations = saved.stations;
+  for (const [t, meta] of Object.entries(rubricMeta)) ui("new-type").add(new Option(meta.label, t));
+  renderRubric(); renderStations(); redraw();
+}
+
+async function saveStations() {
+  if (labDataset) { ui("stations-msg").textContent = "A lab dataset is loaded: go back to your stations to save."; return; }
+  const res = await fetch("/stations", {method: "POST", headers: {"Content-Type": "application/json"},
+                                        body: JSON.stringify({rubric, stations})});
+  const out = await res.json();
+  if (res.ok) markDirty(false);
+  ui("stations-msg").innerHTML = res.ok
+    ? `Saved ${out.saved} stations · <a href="/stations/stations_manual.gpkg">download the file (.gpkg)</a>`
+    : `<span class="warn">${icon("warn")} Not saved: ${esc(typeof out.detail === "string" ? out.detail
+        : (out.detail || []).map(e => e.msg).join("; "))}</span>`;
+}
+
+async function loadCandidates() {
+  const res = await fetch("/stations/candidates");
+  if (!res.ok) { ui("stations-msg").innerHTML = `<span class="warn">${(await res.json()).detail}</span>`; return; }
+  const {candidates} = await res.json();
+  const have = new Set(stations.map(s => s.id));
+  const added = candidates.filter(c => !have.has(c.id))
+    .map(c => ({service_time_min: 10, ...c, note: c.note || ""}));
+  stations.push(...added);
+  ui("stations-msg").textContent = added.length
+    ? `Added ${added.length} suggested stations. Check them on the photo: a "?" marks a rough guess. Hover an id for its source.`
+    : "The suggested stations are already in the list.";
+  markDirty(); renderStations(); redraw();
+}
+
+// ---------------------------------------------------------------------------
+// Metaheuristics lab datasets (docs/lab/README.md): one station set per experiment case,
+// or the full pool of 120. Loading replaces the list so a plan uses exactly that set;
+// Save stays off until "Back to my stations", so the saved stations are never overwritten.
+// ---------------------------------------------------------------------------
+let labDataset = null;
+
+async function loadLabDatasets() {
+  const res = await fetch("/lab/datasets");
+  const list = res.ok ? await res.json() : [];
+  const sel = ui("lab-dataset");
+  sel.replaceChildren(...list.map(d => new Option(d.label, d.id)));
+  ui("lab-row").hidden = list.length === 0;
+}
+
+function renderLabNotice() {
+  const n = ui("lab-notice");
+  n.hidden = !labDataset;
+  ui("save-stations").disabled = !!labDataset;
+  if (!labDataset) { n.replaceChildren(); return; }
+  n.innerHTML = `Lab dataset <b>${esc(labDataset.label)}</b> loaded: ${labDataset.stations.length} stations, ` +
+    `scores as in the experiment. Pick a route solver in Plan › More options. Save is off. `;
+  const back = document.createElement("button");
+  back.className = "link"; back.textContent = "Back to my stations";
+  back.addEventListener("click", restoreMyStations);
+  n.append(back);
+}
+
+async function loadLabDataset() {
+  const id = ui("lab-dataset").value;
+  if (!id) return;
+  if (dirty && !labDataset && !confirm("Your station list has unsaved changes. Load the lab dataset anyway?")) return;
+  const res = await fetch(`/lab/datasets/${encodeURIComponent(id)}`);
+  if (!res.ok) { ui("stations-msg").innerHTML = `<span class="warn">Lab dataset not found (${res.status})</span>`; return; }
+  const ds = await res.json();
+  labDataset = ds;
+  stations = ds.stations.map(({score, ...st}) => ({...st, lab_score: score, note: `lab dataset ${ds.id}`}));
+  ui("stations-msg").textContent = "";
+  markDirty(false); markPlanStale(); renderLabNotice(); renderStations(); redraw();
+}
+
+async function restoreMyStations() {
+  const saved = await (await fetch("/stations")).json();
+  stations = saved.stations;
+  labDataset = null;
+  ui("stations-msg").textContent = "Back to your saved stations.";
+  markDirty(false); markPlanStale(); renderLabNotice(); renderStations(); redraw();
+}
+
+// E8 contact stations (JB, release stations-e8-v0): rock points next to boxwork-sized
+// sand patches. Type "contact", so their score is the rubric's contact score; E8's own
+// 1-5 score is in the note (hover the id). E5 plans more than 20 stations with CP-SAT.
+async function loadE8Stations() {
+  const res = await fetch("/stations/e8");
+  if (!res.ok) { ui("stations-msg").innerHTML = `<span class="warn">${(await res.json()).detail}</span>`; return; }
+  const {stations: e8} = await res.json();
+  const have = new Set(stations.map(s => s.id));
+  const added = e8.filter(s => !have.has(s.id))
+    .map(({e8_score, ...s}) => s);
+  stations.push(...added);
+  ui("stations-msg").textContent = added.length
+    ? `Added ${added.length} automatic stations (${stations.length} in total): rock next to sand patches, found on the photo. ` +
+      `They count as "contact". Hover an id for the detector's own score.`
+    : "The automatic stations are already in the list.";
+  markDirty(); renderStations(); redraw();
+}
+
+// ---------------------------------------------------------------------------
+// Rover photos (P3b, issue #103): Curiosity's Navcam photos, one orange dot per stop
+// where the rover stood. web/hud_photos.js reads the catalogue (no DOM); here we draw
+// the dots, the card of a stop and the wedge each view looks along. Optional: without
+// the catalogue the box is disabled and the rest of the HUD works as before.
+// ---------------------------------------------------------------------------
+let photoApi = null, photoModel = null, photoStopsList = [], photoLoad = {state: "loading"};
+let openStop = null, openView = null, openCard = null, photoReturn = null;
+const PHOTO_RGB = [255, 150, 60];
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+// Runs once in the background from main(); never rejects, never blocks the map.
+async function loadPhotos() {
+  let out = null;
+  try { photoApi = await import("/hud_photos.js"); }
+  catch { out = {ok: false, error: "the photo module could not be loaded"}; }
+  try {
+    if (!out) out = await photoApi.loadCatalog();
+    if (out.ok) { photoStopsList = photoApi.photoStops(out.model); photoModel = out.model; }
+  } catch (err) {
+    out = {ok: false, error: `the photo catalogue could not be read (${(err && err.message) || err})`};
+  }
+  if (out.ok && photoModel) {
+    photoLoad = {state: "ok", stops: out.stopCount ?? photoStopsList.length, photos: out.photoCount};
+  } else {
+    photoLoad = {state: "failed", error: out.error || "the photo catalogue could not be read"};
+    photoModel = null; photoStopsList = [];
+    ui("show-photos").checked = false; ui("show-photos").disabled = true;
+    closePhotoCard();
+  }
+  renderPhotosNote();
+  if (photoModel && Object.keys(rubricMeta).length) renderStations();   // otherwise loadStations draws the lines
+  redraw();
+}
+
+function renderPhotosNote() {
+  const note = ui("photos-note");
+  if (photoLoad.state === "failed") {                    // said even with the box off: it cannot be turned on
+    note.textContent = `Unavailable: ${photoLoad.error}. The rest of the map works without them.`;
+    note.hidden = false;
+    return;
+  }
+  note.hidden = !ui("show-photos").checked;
+  note.textContent = photoLoad.state === "ok"
+    ? `${plural(photoLoad.stops, "stop")}, ${plural(photoLoad.photos, "photo")} taken from the ground by Curiosity. Click a dot to see them.`
+    : "Loading…";
+}
+
+// The dots, and under them the wedge of each view of the open stop (the selected one stronger).
+function photoLayers() {
+  if (!photoModel || !ui("show-photos").checked) return [];
+  const out = [];
+  if (openCard) {
+    const sel = v => v.id === openView;
+    const views = openCard.views.filter(v => Array.isArray(v.ring) && v.ring.length > 2)
+      .sort((a, b) => sel(a) - sel(b));                   // the selected view is drawn last, on top
+    out.push(new PolygonLayer({id: "photo-wedges", data: views, pickable: false,
+      getPolygon: v => v.ring.map(([x, y]) => toWorld(x, y)),
+      getFillColor: v => [...PHOTO_RGB, sel(v) ? 80 : 26], getLineColor: v => [...PHOTO_RGB, sel(v) ? 235 : 110],
+      stroked: true, filled: true, lineWidthUnits: "pixels", getLineWidth: v => sel(v) ? 2 : 1,
+      updateTriggers: {getFillColor: openView, getLineColor: openView, getLineWidth: openView}}));
+  }
+  const isOpen = s => s.groupId === openStop;
+  out.push(new ScatterplotLayer({id: "rover-photos", data: photoStopsList, pickable: true,
+    autoHighlight: true, highlightColor: [255, 255, 255, 110],
+    getPosition: s => toWorld(s.x, s.y), getRadius: s => isOpen(s) ? 6.5 : 5, radiusUnits: "pixels",
+    getFillColor: PHOTO_RGB, stroked: true, lineWidthUnits: "pixels",
+    getLineColor: s => isOpen(s) ? [255, 255, 255] : [20, 12, 6], getLineWidth: s => isOpen(s) ? 2 : 1,
+    updateTriggers: {getRadius: openStop, getLineColor: openStop, getLineWidth: openStop}}));
+  return out;
+}
+
+// Card of a stop, showing photoId (or its first view). from.station: opened from that
+// station's line, so the focus moves into the card and comes back to that line.
+function openPhotoCard(groupId, photoId = null, from = {}) {
+  if (!photoModel) return false;
+  let card = null;
+  try { card = photoApi.stopCard(photoModel, groupId); } catch (err) { console.error(err); }
+  if (!card || !Array.isArray(card.views) || !card.views.length) return false;
+  const box = ui("photo-card"), focusInCard = box.contains(document.activeElement);
+  if (!focusInCard) photoReturn = {el: document.activeElement, station: from.station || null};   // else keep the first one
+  if (!ui("show-photos").checked) { ui("show-photos").checked = true; renderPhotosNote(); }
+  openStop = groupId; openCard = card;
+  ui("photo-title").textContent = card.title || "Rover photo stop";
+  // One button per view; two views towards the same compass word get a number.
+  const row = ui("photo-views"), count = {}, seen = {};
+  row.replaceChildren();
+  for (const v of card.views) count[v.direction] = (count[v.direction] || 0) + 1;
+  for (const v of card.views) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "secondary";
+    if (v.thumb) {
+      const img = new Image();
+      img.alt = ""; img.decoding = "async";
+      img.addEventListener("error", () => img.remove(), {once: true});
+      img.src = v.thumb;
+      b.append(img);
+    }
+    seen[v.direction] = (seen[v.direction] || 0) + 1;
+    const word = document.createElement("span");
+    word.textContent = `${v.direction ?? "View"}${count[v.direction] > 1 ? ` ${seen[v.direction]}` : ""}`;
+    b.append(word);
+    if (!v.available) b.title = "Image not available";
+    b.addEventListener("click", () => showPhotoView(v.id));
+    row.append(b);
+  }
+  box.hidden = false;
+  box.scrollTop = 0;
+  showPhotoView((card.views.find(v => v.id === photoId) || card.views[0]).id);
+  keepStopInView(card.x, card.y);
+  // The rebuilt row must not drop a focus that was in the card to the page: the new
+  // selected view takes it.
+  if (focusInCard && !box.contains(document.activeElement)) (row.querySelector('[aria-pressed="true"]') || box).focus({preventScroll: true});
+  else if (from.station) box.focus({preventScroll: true});
+  announce(`Rover photo stop, ${plural(card.views.length, "view")}`);
+  return true;
+}
+
+function showPhotoView(id) {
+  const i = openCard ? openCard.views.findIndex(v => v.id === id) : -1;
+  if (i < 0) return;
+  const v = openCard.views[i];
+  openView = v.id;
+  [...ui("photo-views").children].forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  // Catalogue text goes in as text and image addresses as .src: never as HTML.
+  const missing = () => Object.assign(document.createElement("div"), {className: "pc-missing", textContent: "Image not available"});
+  if (v.card) {
+    const img = new Image();
+    img.className = "pc-img"; img.alt = v.alt || "Rover photo"; img.decoding = "async";
+    img.addEventListener("error", () => img.replaceWith(missing()), {once: true});
+    img.src = v.card;
+    ui("photo-media").replaceChildren(img);
+  } else ui("photo-media").replaceChildren(missing());
+  const facts = ui("photo-facts");
+  facts.replaceChildren();
+  for (const [label, value] of v.facts || []) {
+    const dt = document.createElement("dt"), dd = document.createElement("dd");
+    dt.textContent = label; dd.textContent = String(value ?? "");
+    facts.append(dt, dd);
+  }
+  const actions = ui("photo-actions");
+  actions.replaceChildren();
+  if (typeof v.open3d === "string" && v.open3d.startsWith("/3d/")) {
+    const a = document.createElement("a");
+    a.className = "btn ext"; a.href = v.open3d; a.target = "_blank"; a.rel = "noopener";
+    a.title = "See this photo where it was taken, in the 3D view";
+    a.textContent = "Open in 3D";
+    a.insertAdjacentHTML("beforeend", " " + icon("ext"));
+    actions.append(a);
+  }
+  redraw();
+}
+
+// The longest part of [lo, hi] that none of the [a, b] cuts covers.
+function freeSpan(lo, hi, cuts) {
+  let best = [lo, lo], at = lo;
+  for (const [a, b] of cuts.filter(([a, b]) => b > lo && a < hi).sort((p, q) => p[0] - q[0])) {
+    if (a - at > best[1] - best[0]) best = [at, a];
+    at = Math.max(at, b);
+  }
+  return hi - at > best[1] - best[0] ? [at, hi] : best;
+}
+
+// When the open card's stop is hidden (off the visible map, within 40 px of the card, or
+// under the legend or the map tools), pan the map, zoom unchanged, so the stop sits in the
+// middle of the largest strip of map the card leaves free (left of it on wide layouts,
+// below or above it on phones), with the legend and the tools cut out of that strip.
+// A stop that is already clear stays put.
+function keepStopInView(x, y) {
+  const vp = deckgl && deckgl.getViewports()[0];
+  if (!vp || !Number.isFinite(x) || !Number.isFinite(y)) return;
+  const map = ui("map").getBoundingClientRect();
+  const local = (el, pad) => {                   // an element's box on the map, grown by pad px; null when not shown
+    const c = el.getBoundingClientRect();
+    return c.width && c.height ? {l: c.left - map.left - pad, t: c.top - map.top - pad,
+                                  r: c.right - map.left + pad, b: c.bottom - map.top + pad} : null;
+  };
+  const card = local(ui("photo-card"), 0);
+  if (!card) return;
+  const others = [local(ui("legend"), 8), local(ui("map-tools"), 8)].filter(Boolean);
+  const [px, py] = vp.project(toWorld(x, y)), M = 40, EDGE = 20, W = vp.width, H = vp.height;
+  const inside = (r, m = 0) => px >= r.l - m && px <= r.r + m && py >= r.t - m && py <= r.b + m;
+  const offMap = px < EDGE || px > W - EDGE || py < EDGE || py > H - EDGE;
+  if (!offMap && !inside(card, M) && !others.some(r => inside(r))) return;
+  // The strips around the card; in each, the longest stretch the legend and the tools leave.
+  const tall = (x0, x1) => {
+    const [y0, y1] = freeSpan(0, H, others.filter(r => r.r > x0 && r.l < x1).map(r => [r.t, r.b]));
+    return {x0, x1, y0, y1};
+  };
+  const wide = (y0, y1) => {
+    const [x0, x1] = freeSpan(0, W, others.filter(r => r.b > y0 && r.t < y1).map(r => [r.l, r.r]));
+    return {x0, x1, y0, y1};
+  };
+  const strips = [tall(0, Math.max(0, card.l)), tall(Math.min(W, card.r), W),      // left and right of the card
+                  wide(0, Math.max(0, card.t)), wide(Math.min(H, card.b), H)];     // above and below it
+  const area = s => Math.max(0, s.x1 - s.x0) * Math.max(0, s.y1 - s.y0);
+  const best = strips.reduce((a, s) => area(s) > area(a) ? s : a);
+  if (area(best) <= 0) return;
+  // Moving the view centre by the stop's offset from the strip's centre brings it there.
+  const [tx, ty] = vp.unproject([W / 2 + px - (best.x0 + best.x1) / 2, H / 2 + py - (best.y0 + best.y1) / 2]);
+  deckgl.setProps({initialViewState: {target: [tx, ty, 0], zoom: vp.zoom, minZoom: -1, maxZoom: 8,
+    transitionDuration: reduceMotion ? 0 : 400, transitionInterpolator: new deck.LinearInterpolator(["target", "zoom"])}});
+}
+
+// Closes the card and its wedges. When the focus was inside, it goes back to where the
+// card was opened from (the station's line, or the map).
+function closePhotoCard() {
+  if (!openCard) return;
+  const back = photoReturn, box = ui("photo-card"), hadFocus = box.contains(document.activeElement);
+  openStop = openView = openCard = photoReturn = null;
+  box.hidden = true;
+  ui("photo-views").replaceChildren(); ui("photo-media").replaceChildren();
+  if (hadFocus) {
+    const line = back && back.station && [...document.querySelectorAll("#station-list .st-photo")]
+      .find(b => b.dataset.station === back.station);
+    const el = line || (back && back.el && back.el.isConnected && back.el !== document.body ? back.el : ui("map"));
+    el.focus({preventScroll: true});
+  }
+  redraw();
+}
+
+// The rover photo nearest to a station, as a line under its row: a button when a photo is near.
+function photoLineFor(s) {
+  if (!photoModel) return null;
+  let p = null;
+  try { p = photoApi.stationPhotoLine(photoModel, {x: s.x, y: s.y}); } catch (err) { console.error(err); }
+  if (!p || !p.short) return null;
+  const el = document.createElement(p.groupId ? "button" : "div");
+  el.className = "st-photo";
+  el.innerHTML = `${icon("photo")} Photo`;
+  el.title = p.text ? `${p.short} · ${p.text}` : p.short;
+  if (p.groupId) {
+    el.type = "button";
+    el.dataset.station = s.id;
+    el.setAttribute("aria-label", `Rover photo for ${s.id}: ${p.short}`);     // named with its station, like the row's other controls
+    el.addEventListener("click", () => openPhotoCard(p.groupId, p.photoId, {station: s.id}));
+  }
+  return el;
+}
+
+// ---------------------------------------------------------------------------
+// Radio (E11, JB): line of sight from the habitat antenna (3 m) to a suit radio
+// (1.7 m) on the DEM. After each plan, POST /comms/check gives the stretches of the
+// route with no direct radio and the pair state (a partner 20 m behind can relay).
+// Without the E11 API (no GDAL) the line just says it is unavailable.
+// ---------------------------------------------------------------------------
+let radioFC = null;
+const radioHabitat = () => (planFC && planFC.properties.habitat) || baseXY ||
+  [X0 + SIZE_M / 2, Y0 - SIZE_M / 2];
+
+async function checkRadio() {
+  radioFC = null;
+  ui("plan-radio").textContent = "";
+  try {
+    const res = await fetch("/comms/check", {method: "POST", headers: {"Content-Type": "application/json"},
+                                             body: JSON.stringify({})});
+    if (!res.ok) { ui("plan-radio").textContent = `Radio check unavailable (${(await res.json()).detail})`; return; }
+    radioFC = await res.json();
+    const one = radioFC.properties.single, pair = radioFC.properties.pair.unlinked;
+    ui("plan-radio").innerHTML = oneLine(`<b style="color:var(--text)">Radio:</b> ` +
+      (one.length_m < 1 ? "in sight along the whole walk." :
+       `<b style="color:var(--text)">${(one.fraction * 100).toFixed(0)} %</b> of the walk without direct radio.`) +
+      ` <a href="#" id="radio-show">${ui("show-radio").checked ? "Hide" : "Show"} on the map</a>`,
+      (one.length_m < 1 ? "" :
+       `${one.length_m.toFixed(0)} m, about ${one.duration_min.toFixed(0)} min; longest stretch ${one.longest_m.toFixed(0)} m. ` +
+       `Walking as a pair ${radioFC.properties.pair.gap_m} m apart leaves ${pair.length_m.toFixed(0)} m with no link. `) +
+      `Line of sight only: a cautious estimate.`);
+    ui("radio-show").addEventListener("click", ev => {
+      ev.preventDefault();
+      ui("show-radio").checked = !ui("show-radio").checked;
+      ui("show-radio").dispatchEvent(new Event("input"));
+    });
+    redraw();
+  } catch (err) { ui("plan-radio").textContent = `Radio check unavailable (${err.message})`; }
+}
+
+// ---------------------------------------------------------------------------
+// Best time to leave (P6, Diana): GET /plan/departure replays the last plan's clock at
+// each departure time (every 15 min) and says how much of the walk is in sunlight, in
+// the terrain's shadow (1 m DEM) or in the dark. Sol: the one of "Weather on the day".
+// ---------------------------------------------------------------------------
+async function checkDeparture() {
+  const box = ui("plan-departure");
+  box.textContent = "";
+  const sol = Number(ui("wx-sol").value) || 4711;
+  try {
+    const res = await fetch(`/plan/departure?sol=${encodeURIComponent(sol)}`);
+    if (!res.ok) { box.textContent = `Best time to leave unavailable (${esc((await res.json()).detail)})`; return; }
+    const d = await res.json(), b = d.best;
+    const lit = d.lit_window_clock;
+    box.innerHTML = oneLine(`<b style="color:var(--text)">Best time to leave:</b> ` +
+      (lit ? `<b style="color:var(--text)">${esc(lit[0])}–${esc(lit[1])}</b>, all in sunlight.`
+           : `<b style="color:var(--text)">${esc(d.best_clock)}</b>, ${(b.sunlit_share * 100).toFixed(0)} % in sunlight.`),
+      (lit ? `Best ${esc(d.best_clock)} (${esc(d.best_mission_clock)} on the mission clock). `
+           : `No departure keeps the whole walk in sunlight. `) +
+      `Sol ${esc(d.sol)}, local solar time at the habitat. Shadows from the 1 m terrain; temperature not used.`);
+  } catch (err) { box.textContent = `Best time to leave unavailable (${esc(err.message)})`; }
+}
+
+const redraw = () => { if (deckgl) deckgl.setProps({layers: layers()}); renderLegend(); };
+
+// One clear line on screen; the explanation folded under "More" (#124).
+function oneLine(line, more) {
+  return more ? `<div>${line}</div><details class="more line-more"><summary>More</summary><div>${more}</div></details>`
+              : `<div>${line}</div>`;
+}
+
+// The map legend starts closed on tablets and phones, where it covered up to 45 % of the map.
+if (matchMedia("(max-width: 860px)").matches) ui("legend").open = false;
+
+// ---------------------------------------------------------------------------
+// Walkback (guide sections 20.3-20.5): red line = R_T(v) = 30 min (contingency
+// oxygen, depends only on the base); cyan line = F_E(p, v) + R_E(v) = energy left
+// (where the astronaut can still go AND come back from the current position).
+// ---------------------------------------------------------------------------
+let wbFC = null, astronaut = null, baseXY = null, sepPath = null, kbCursor = null, planStale = false;
+const habitatXY = () => baseXY || (planFC && planFC.properties.habitat) || [X0 + SIZE_M / 2, Y0 - SIZE_M / 2];
+
+function renderHabitat() {
+  if (ui("inputs-summary")) renderInputsSummary();
+  ui("habitat-text").textContent = baseXY
+    ? `${(baseXY[0] - X0).toFixed(0)} m east, ${(baseXY[1] - (Y0 - SIZE_M)).toFixed(0)} m north`
+    : "Centre of the area";
+  ui("habitat-reset").hidden = !baseXY;
+}
+
+// A plan that no longer matches the inputs must not look valid.
+function markPlanStale() {
+  if (!planFC || planStale) return;
+  planStale = true;
+  ui("plan-stale").hidden = false;
+  ui("plan-info").classList.add("stale-dim");
+  ui("plan-radio").classList.add("stale-dim");
+  ui("plan-departure").classList.add("stale-dim");
+  ui("plan-badge").innerHTML = `<span title="Out of date: plan again" style="color:var(--warn)">•</span>`;
+  ui("plan-btn").classList.remove("secondary");                    // re-planning is the main action again
+  announce("The plan is out of date. Plan again to update it.");
+}
+function clearPlanStale() {
+  planStale = false;
+  ui("plan-stale").hidden = true;
+  ui("plan-info").classList.remove("stale-dim");
+  ui("plan-radio").classList.remove("stale-dim");
+  ui("plan-departure").classList.remove("stale-dim");
+}
+
+function wbLayers() {
+  const out = [];
+  // The safety lines belong to the Walk step; elsewhere the map shows the plan alone.
+  if (wbFC && currentTab === "walk") {
+    const lines = kind => wbFC.features.filter(f => f.properties.kind === kind)
+      .flatMap(f => f.geometry.coordinates);
+    // Each line is drawn twice: a dark casing underneath so it stays readable
+    // over the red/orange slope layer, then the coloured line on top.
+    const outline = (id, data, color, width) => [
+      new PathLayer({id: id + "-casing", data, getPath: l => l.map(([x, y]) => toWorld(x, y)),
+                     getColor: [0, 0, 0, 200], getWidth: width + 3, widthUnits: "pixels",
+                     jointRounded: true, capRounded: true}),
+      new PathLayer({id, data, getPath: l => l.map(([x, y]) => toWorld(x, y)),
+                     getColor: color, getWidth: width, widthUnits: "pixels",
+                     jointRounded: true, capRounded: true}),
+    ];
+    if (ui("show-radius").checked) {
+      const circles = wbFC.features.filter(f => f.properties.kind === "fixed_radius");
+      out.push(new PathLayer({id: "fixed-radius", data: circles,
+        getPath: f => f.geometry.coordinates.map(([x, y]) => toWorld(x, y)),
+        getColor: (f, {index}) => index === 0 ? [255, 255, 255, 200] : [210, 210, 210, 150],
+        getWidth: 2, widthUnits: "pixels", getDashArray: [6, 4], dashJustified: true,
+        extensions: [new deck.PathStyleExtension({dash: true})]}));
+      // Each circle is named at its top, so it is not mistaken for a safety line.
+      out.push(new TextLayer({id: "fixed-radius-labels", data: circles,
+        getPosition: f => { const c = f.geometry.coordinates; const top = c.reduce((a, b) => b[1] > a[1] ? b : a); return toWorld(...top); },
+        getText: f => `${(f.properties.radius_m / 1000).toFixed(2)} km rule`, getSize: 11, fontFamily: MAP_FONT, fontWeight: 600,
+        getColor: [235, 240, 245], background: true, backgroundPadding: [4, 1], getBackgroundColor: [16, 20, 26, 210],
+        getPixelOffset: [0, -10]}));
+    }
+    // Out of reach with the energy left: the box shaded dark, with the reachable area cut out.
+    const box = [[X0, Y0], [X0 + SIZE_M, Y0], [X0 + SIZE_M, Y0 - SIZE_M], [X0, Y0 - SIZE_M], [X0, Y0]];
+    const holes = lines("energy_safe_boundary").filter(l => l.length > 3)
+      .map(l => (l[0][0] === l[l.length - 1][0] && l[0][1] === l[l.length - 1][1]) ? l : [...l, l[0]]);
+    out.unshift(new PolygonLayer({id: "out-of-reach", data: [{rings: [box, ...holes]}],
+      getPolygon: d => d.rings.map(r => r.map(([x, y]) => toWorld(x, y))),
+      getFillColor: [6, 8, 12, 140], stroked: false, filled: true}));
+    out.push(...outline("red-line", lines("emergency_time_boundary"), [255, 59, 48], 3));
+  }
+  const pts = [];
+  if (!planFC) pts.push({xy: habitatXY(), color: [255, 255, 255], r: 8});      // the plan draws its own start
+  if (astronaut && (currentTab === "walk" || sepPath)) pts.push({xy: astronaut, color: [255, 64, 200], r: 7});
+  out.push(new ScatterplotLayer({id: "wb-points", data: pts,
+    getPosition: d => toWorld(...d.xy), getFillColor: d => d.color, getRadius: d => d.r,
+    radiusUnits: "pixels", stroked: true, getLineColor: [0, 0, 0], lineWidthUnits: "pixels", getLineWidth: 2}));
+  // The storm's way home is amber and dashed: the red line stays the 30 min boundary alone.
+  if (sepPath) {
+    const p = sepPath.geometry.coordinates.map(([x, y]) => toWorld(x, y));
+    out.push(new PathLayer({id: "sep-casing", data: [p], getPath: d => d, getColor: [0, 0, 0, 220], getWidth: 9, widthUnits: "pixels",
+                            capRounded: true, jointRounded: true}));
+    out.push(new PathLayer({id: "sep-path", data: [p], getPath: d => d, getColor: [255, 176, 32], getWidth: 5, widthUnits: "pixels",
+                            capRounded: true, jointRounded: true, getDashArray: [3, 1.5], dashJustified: true,
+                            extensions: [new deck.PathStyleExtension({dash: true})]}));
+  }
+  // The habitat, anchor of every guarantee, is named on the map, above any line.
+  out.push(new TextLayer({id: "habitat-label", data: [habitatXY()], getPosition: xy => toWorld(...xy), getText: () => "Habitat",
+    getSize: 12, getPixelOffset: [0, 18], fontWeight: 700, fontFamily: MAP_FONT, getColor: [10, 14, 20], background: true,
+    backgroundPadding: [5, 2], getBackgroundColor: [255, 255, 255, 230], updateTriggers: {getPosition: JSON.stringify(habitatXY())}}));
+  const mode = activeMode();
+  if (mode && kbCursor) out.push(new ScatterplotLayer({id: "kb-cursor", data: [kbCursor], getPosition: c => c,
+    getRadius: 10, radiusUnits: "pixels", filled: false, stroked: true, getLineColor: [255, 122, 69], lineWidthUnits: "pixels", getLineWidth: 3}));
+  return out;
+}
+
+async function requestWalkback() {
+  if (!astronaut) return;
+  ui("wb-info").innerHTML = '<div class="muted">Working out the way back…</div>';
+  const body = {current_position: astronaut, energy_remaining_wh: Number(ui("wb-energy").value) || 0,
+                emergency_return_time_s: 1800, base: baseXY, max_cell_slope_deg: blockLimit(),
+                human_cost: ui("human-cost").checked};
+  const res = await fetch("/walkback", {method: "POST",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const out = await res.json();
+  if (!res.ok) {
+    const d = typeof out.detail === "string" ? out.detail : (out.detail || []).map(e => e.msg).join("; ");
+    ui("wb-info").innerHTML = `<div class="warn">${icon("warn")} ${esc(/no walkable path/.test(d)
+      ? "No walkable way back from this point: it is too steep or cut off. Pick another point." : d)}</div>`;
+    setWalkStatus(null);
+    return;
+  }
+  wbFC = out;
+  const p = out.properties;
+  if (!baseXY) baseXY = out.features.find(f => f.properties.kind === "base").geometry.coordinates;
+  const circles = out.features.filter(f => f.properties.kind === "fixed_radius").map(f => f.properties);
+  // Notes for the team stay out of the way; only real warnings are shown as such.
+  const notes = p.warnings.filter(w => !/^return fields on/.test(w))
+    .filter(w => !/^base not set/.test(w));
+  setWalkStatus(p.return_time_s, p.energy_left_after_return_wh,
+    routeProf && astronaut === routeProf.coords[routeIdx] ? `On the plan, returning costs ${p.return_energy_wh.toFixed(0)} Wh.`
+      : `At the point you placed, returning costs ${p.return_energy_wh.toFixed(0)} Wh.`);
+  ui("walk-empty").hidden = true;
+  ui("fit-walk").hidden = false;
+  if (walkFitPending && currentTab === "walk") { walkFitPending = false; fitWalk(); }
+  announce(`Home in ${TERMS.minutes(p.return_time_s)} minutes, ${Math.max(0, p.energy_left_after_return_wh).toFixed(0)} watt-hours spare.`);
+  ui("wb-info").innerHTML =
+    (ui("show-radius").checked && circles.length
+      ? `<div class="callout">` + oneLine(
+          (() => { const w = circles.reduce((a, r) => r.falsely_safe_pct > a.falsely_safe_pct ? r : a);
+                   return `Fixed-distance rule: <b>${w.falsely_safe_pct.toFixed(0)} %</b> of its ${(w.radius_m / 1000).toFixed(2)} km circle cannot get back in 30 min.`; })(),
+          `A fixed-distance rule draws a circle and calls everything inside safe.` +
+          circles.map(r => `<div>${(r.radius_m / 1000).toFixed(2)} km circle: <b>${r.falsely_safe_pct.toFixed(0)} %</b> of it ` +
+            `cannot get back in 30 min (${r.falsely_safe_no_way_back_pct.toFixed(0)} % no way back, ` +
+            `${r.falsely_safe_too_slow_pct.toFixed(0)} % too slow).</div>`).join("")) + `</div>` : "") +
+    notes.map(w => `<div class="muted" style="margin-top:6px">${esc(w)}</div>`).join("");
+  redraw();
+}
+
+// ---------------------------------------------------------------------------
+// Radiation (E12, Juan): a dose budget along the EVA timeline and an SEP alert
+// scenario. No per-pixel radiation map (guide section 43): the background
+// barely changes across a few km. Dose on the way back = return time x rate.
+// ---------------------------------------------------------------------------
+let radInfo = null;
+
+function drawDoseChart(curve) {
+  const svg = ui("rad-chart"), W = 226, H = 86, L = 30, B = 16, T = 4, R = 6;
+  const tMax = curve[curve.length - 1].t_h, dMax = Math.max(...curve.map(p => p.dose_ugy));
+  const x = t => L + (t / tMax) * (W - L - R), y = d => H - B - (d / dMax) * (H - B - T);
+  const path = curve.map((p, i) => `${i ? "L" : "M"}${x(p.t_h).toFixed(1)},${y(p.dose_ugy).toFixed(1)}`).join("");
+  svg.innerHTML = `
+    <line class="axis" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/>
+    <line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>
+    <text class="tick" x="${L - 4}" y="${y(dMax) + 3}" text-anchor="end">${dMax.toFixed(0)}</text>
+    <text class="tick" x="${L - 4}" y="${H - B + 3}" text-anchor="end">0</text>
+    <text class="tick" x="${L}" y="${H - 3}">0 h</text>
+    <text class="tick" x="${W - R}" y="${H - 3}" text-anchor="end">${tMax.toFixed(1)} h</text>
+    <path class="line" d="${path}"/>
+    <line class="cross" id="rad-cross" y1="${T}" y2="${H - B}" visibility="hidden"/>
+    <rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent" id="rad-hit"/>`;
+  const cross = svg.querySelector("#rad-cross");
+  const showRad = p => {
+    cross.setAttribute("x1", x(p.t_h)); cross.setAttribute("x2", x(p.t_h));
+    cross.setAttribute("visibility", "visible");
+    ui("rad-tip").textContent = `t = ${p.t_h.toFixed(2)} h · ${p.dose_ugy.toFixed(1)} µGy`;
+  };
+  svg.querySelector("#rad-hit").addEventListener("mousemove", ev => {
+    const box = svg.getBoundingClientRect();
+    const t = Math.min(tMax, Math.max(0, (ev.clientX - box.left - L) / (W - L - R) * tMax));
+    showRad(curve.reduce((a, b) => Math.abs(b.t_h - t) < Math.abs(a.t_h - t) ? b : a));
+  });
+  chartKeys(svg, curve, showRad, () => { cross.setAttribute("visibility", "hidden"); ui("rad-tip").textContent = ""; });
+  svg.querySelector("#rad-hit").addEventListener("mouseleave", () => {
+    cross.setAttribute("visibility", "hidden"); ui("rad-tip").textContent = "";
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Data sources (P4, #44): the "N data types from M missions" line. Only sources
+// that are on disk and used by the product are counted; planned ones are listed.
+// ---------------------------------------------------------------------------
+async function loadSources() {
+  const res = await fetch("/data_sources");
+  if (!res.ok) return;
+  const d = await res.json();
+  ui("sources").querySelector("summary").innerHTML =
+    `Data sources <small><b>${d.n_types} data types</b> from ${d.n_missions} missions</small>`;
+  ui("sources-chip").innerHTML = `<b>${d.n_types} data types</b> from ${d.n_missions} missions ›`;
+  const esc = t => String(t).replace(/[&<>]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c]));
+  ui("sources-list").innerHTML =
+    d.sources.map(s => `<li><span style="color:var(--text)">${esc(s.type)}</span>: ${esc(s.instrument)} ` +
+                       `(${esc(s.mission)}) → ${esc(s.use)}</li>`).join("") +
+    d.missing.map(s => `<li>${esc(s.type)}: ${esc(s.instrument)} — data missing on this machine</li>`).join("") +
+    d.planned.map(s => `<li><i>Planned</i>: ${esc(s.type)}, ${esc(s.instrument)} (${esc(s.mission)})</li>`).join("");
+}
+
+// ---------------------------------------------------------------------------
+// Surface weather (REMS, P4): conditions of the EVA's sol and the campaign's
+// daily air temperature range. Context for when to go out, not a cost term.
+// ---------------------------------------------------------------------------
+function drawWeatherChart(series, selSol) {
+  const svg = ui("wx-chart"), W = 226, H = 96, L = 30, B = 16, T = 6, R = 34;
+  const s0 = series[0].sol, s1 = series[series.length - 1].sol;
+  const vals = series.flatMap(p => [p.air_min_c, p.air_max_c]);
+  const vMin = Math.floor(Math.min(...vals) / 10) * 10, vMax = Math.ceil(Math.max(...vals) / 10) * 10;
+  const x = sol => L + (sol - s0) / (s1 - s0) * (W - L - R);
+  const y = v => H - B - (v - vMin) / (vMax - vMin) * (H - B - T);
+  // Break the line where sols are missing (gaps longer than 3 sols).
+  const line = key => series.map((p, i) => {
+    const jump = i === 0 || p.sol - series[i - 1].sol > 3;
+    return `${jump ? "M" : "L"}${x(p.sol).toFixed(1)},${y(p[key]).toFixed(1)}`;
+  }).join("");
+  const last = series[series.length - 1];
+  const inRange = selSol >= s0 && selSol <= s1;
+  svg.innerHTML = `
+    <line class="axis" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/>
+    <line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>
+    <text class="tick" x="${L - 4}" y="${y(vMax) + 3}" text-anchor="end">${vMax}</text>
+    <text class="tick" x="${L - 4}" y="${y(vMin) + 3}" text-anchor="end">${vMin}</text>
+    ${vMin < 0 && vMax > 0 ? `<line class="axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke-dasharray="1 3"/>` +
+      (Math.abs(y(0) - y(vMax)) > 11 && Math.abs(y(0) - y(vMin)) > 11 ? `<text class="tick" x="${L - 4}" y="${y(0) + 3}" text-anchor="end">0</text>` : "") : ""}
+    <text class="tick" x="${L}" y="${H - 3}">sol ${s0}</text>
+    <text class="tick" x="${W - R}" y="${H - 3}" text-anchor="end">${s1}</text>
+    <path class="hi" d="${line("air_max_c")}"/>
+    <path class="lo" d="${line("air_min_c")}"/>
+    <text class="lab" x="${x(last.sol) + 4}" y="${y(last.air_max_c) + 3}">max</text>
+    <text class="lab" x="${x(last.sol) + 4}" y="${y(last.air_min_c) + 3}">min</text>
+    ${inRange ? `<line class="sel" x1="${x(selSol)}" x2="${x(selSol)}" y1="${T}" y2="${H - B}"/>` : ""}
+    <line class="cross" id="wx-cross" y1="${T}" y2="${H - B}" visibility="hidden"/>
+    <rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent" id="wx-hit"/>`;
+  const cross = svg.querySelector("#wx-cross"), hit = svg.querySelector("#wx-hit");
+  const showWx = p => {
+    cross.setAttribute("x1", x(p.sol)); cross.setAttribute("x2", x(p.sol));
+    cross.setAttribute("visibility", "visible");
+    ui("wx-tip").textContent = `sol ${p.sol} · air ${p.air_min_c} to ${p.air_max_c} °C · ground ${p.ground_min_c} to ${p.ground_max_c} °C`;
+  };
+  hit.addEventListener("mousemove", ev => {
+    const box = svg.getBoundingClientRect();
+    const sol = s0 + (ev.clientX - box.left - L) / (W - L - R) * (s1 - s0);
+    showWx(series.reduce((a, b) => Math.abs(b.sol - sol) < Math.abs(a.sol - sol) ? b : a));
+  });
+  chartKeys(svg, series, showWx, () => { cross.setAttribute("visibility", "hidden"); ui("wx-tip").textContent = ""; },
+            p => { ui("wx-sol").value = p.sol; loadWeather(); });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); ui("wx-tip").textContent = ""; });
+  hit.addEventListener("click", () => {          // click a sol on the chart to select it
+    const sol = Number(ui("wx-tip").textContent.match(/sol (\d+)/)?.[1]);
+    if (sol) { ui("wx-sol").value = sol; loadWeather(); }
+  });
+}
+
+// Arrow keys walk a chart's readout point by point (Home/End jump to the ends, Enter selects).
+function chartKeys(svg, points, show, hide, pick) {
+  let i = -1;
+  svg.tabIndex = 0;
+  svg.onfocus = () => { if (i < 0) i = 0; show(points[i]); };
+  svg.onblur = hide;
+  svg.onkeydown = e => {
+    const to = {ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: points.length - 1}[e.key];
+    if (e.key === "Enter" && pick && i >= 0) { e.preventDefault(); pick(points[i]); return; }
+    if (to === undefined) return;
+    e.preventDefault();
+    i = Math.max(0, Math.min(points.length - 1, to));
+    show(points[i]);
+  };
+}
+
+async function loadWeather() {
+  const sol = Number(ui("wx-sol").value) || 4711;
+  const eva = Number(ui("max-min").value) > 0 ? Number(ui("max-min").value) : null;
+  const q = new URLSearchParams({sol});
+  if (eva) q.set("eva_min", eva);
+  const res = await fetch("/weather?" + q);
+  if (!res.ok) { ui("wx-summary").innerHTML = `<span class="warn">${(await res.json()).detail}</span>`; return; }
+  const w = await res.json(), d = w.day;
+  const moved = d.sol !== d.requested_sol ? ` (no data for sol ${d.requested_sol}; nearest)` : "";
+  ui("wx-summary").innerHTML =
+    `<b style="color:var(--text)">Sol ${d.sol}</b> · ${d.earth_date}${moved}<br>` +
+    `Air ${d.air_min_c} to ${d.air_max_c} °C · ${d.pressure_pa} Pa<br>` +
+    w.notes.map(n => "• " + n).join("<br>");
+  if (w.campaign.series.length > 1) drawWeatherChart(w.campaign.series, d.sol);
+}
+
+// ---------------------------------------------------------------------------
+// Minerals from orbit (CRISM/OMEGA, P4): detections within 100 km of the box on a
+// small north-up map in km. None is inside the box: context, not a station value.
+// ---------------------------------------------------------------------------
+const MINERAL_COLORS = {phyllosilicate: "#3987e5", sulfate: "#d95926", silica: "#199e70",
+                        chloride: "#c98500", carbonate: "#d55181", hydrous: "#0ca30c"};
+
+async function loadMinerals() {
+  const res = await fetch("/minerals?radius_km=100");
+  if (!res.ok) { ui("min-summary").innerHTML = `<span class="warn">${(await res.json()).detail}</span>`; return; }
+  const m = await res.json(), S = 200, C = S / 2, k = (C - 8) / m.radius_km;   // px per km
+  const pos = (d, b) => [C + d * k * Math.sin(b * Math.PI / 180), C - d * k * Math.cos(b * Math.PI / 180)];
+  // One mark per location; several detections at the same rounded point share it.
+  const groups = new Map();
+  for (const p of m.points) {
+    const key = `${p.lon.toFixed(2)},${p.lat.toFixed(2)},${p.class}`;
+    if (!groups.has(key)) groups.set(key, {...p, instruments: new Set()});
+    groups.get(key).instruments.add(p.instrument);
+  }
+  const g = m.gale, [gx, gy] = pos(g.distance_km, g.bearing_deg);
+  const marks = [...groups.values()].map((p, i) => {
+    const [x, y] = pos(p.distance_km, p.bearing_deg);
+    return `<circle class="pt" data-i="${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${MINERAL_COLORS[p.class] || "#999"}"/>`;
+  }).join("");
+  ui("min-map").innerHTML = `
+    <clipPath id="min-clip"><rect x="0" y="0" width="${S}" height="${S}"/></clipPath>
+    <circle class="ring" cx="${C}" cy="${C}" r="${50 * k}"/>
+    <circle class="ring" cx="${C}" cy="${C}" r="${100 * k}"/>
+    <text class="tick" x="${C + 3}" y="${C - 50 * k + 11}">50 km</text>
+    <text class="tick" x="${C + 3}" y="${C - 100 * k + 11}">100 km</text>
+    <g clip-path="url(#min-clip)"><circle class="rim" cx="${gx}" cy="${gy}" r="${g.radius_km * k}"/></g>
+    <text class="tick" x="${gx}" y="${gy + 3}" text-anchor="middle">Gale</text>
+    <text class="tick" x="${C}" y="10" text-anchor="middle">N</text>
+    <rect x="${C - 3}" y="${C - 3}" width="6" height="6" fill="var(--accent)"/>
+    <text class="tick" x="${C + 6}" y="${C + 12}">box</text>
+    ${marks}`;
+  const list = [...groups.values()];
+  ui("min-map").querySelectorAll("circle.pt").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      const p = list[Number(el.dataset.i)];
+      ui("min-tip").textContent = `${p.class} · ${[...p.instruments].join(", ")} · ` +
+        `${p.distance_km.toFixed(0)} km at ${p.bearing_deg.toFixed(0)}°`;
+    });
+    el.addEventListener("mouseleave", () => { ui("min-tip").textContent = ""; });
+  });
+  ui("min-key").innerHTML = m.classes.filter(c => m.counts[c] > 0)
+    .map(c => `<span><i style="background:${MINERAL_COLORS[c]}"></i>${c} ${m.counts[c]}</span>`).join("");
+  ui("min-summary").innerHTML = m.notes.map(n => "• " + n).join("<br>");
+}
+
+async function loadRadiation() {
+  const res = await fetch("/radiation");
+  if (!res.ok) { ui("rad-summary").innerHTML = `<span class="warn">${(await res.json()).detail}</span>`; return; }
+  radInfo = await res.json();
+  const e = radInfo.provisional_eva;
+  ui("rad-summary").innerHTML =
+    `Normal days: ${radInfo.background_ugy_h.toFixed(1)} µGy per hour, measured by Curiosity. ` +
+    `A ${e.eva_time_h.toFixed(0)} h walk adds <b style="color:var(--text)">${e.dose_ugy.toFixed(1)} µGy</b> ` +
+    `(about ${e.dose_usv_est.toFixed(0)} µSv). It only changes the plan in a solar storm.`;
+  drawDoseChart(radInfo.curve);
+  for (const sc of radInfo.scenarios) ui("sep-scenario").add(new Option(`${sc.label} · ${sc.rate_ugy_h.toFixed(0)} µGy/h`, sc.id));
+}
+
+async function simulateSEP() {
+  if (!radInfo) return;
+  // Use the rehearsal position when there is a plan; otherwise ask for a point.
+  if (!astronaut && routeProf) { astronaut = routeProf.coords[routeIdx]; }
+  if (!astronaut) { ui("sep-info").innerHTML = `<div class="warn">${icon("warn")} Plan a walk or place the astronaut first (step 4, Walk).</div>`; return; }
+  if (playTimer) togglePlay();             // the alert is about this moment: stop the rehearsal here
+  // Always from where the astronaut is now: a walkback from an earlier point gave a
+  // stale time (0.0 min in the alert against 9.5 min on the walk card, #124).
+  await requestWalkback();
+  if (!wbFC) return;
+  // Draw the way home on the map, so the alert is seen where the astronaut is. It also
+  // checks the energy left on that same path (#119 A2).
+  sepPath = null;
+  try {
+    const res = await fetch("/guide/return_home", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({position: astronaut, habitat: habitatXY(), max_cell_slope_deg: blockLimit(),
+                            human_cost: ui("human-cost").checked,
+                            energy_remaining_wh: Math.max(0, Number(ui("wb-energy").value) || 0)})});
+    if (res.ok) { sepPath = (await res.json()).features[0]; redraw(); }
+  } catch { /* the alert below still works without the path */ }
+  const sc = radInfo.scenarios.find(s => s.id === ui("sep-scenario").value);
+  const p = wbFC.properties, home = sepPath ? sepPath.properties : null;
+  const backS = home ? home.time_s : p.return_time_s, tH = backS / 3600;
+  const short = home && home.feasible === false;
+  const beyond = backS > 1800;
+  const doseBack = tH * sc.rate_ugy_h, doseCalm = tH * radInfo.background_ugy_h;
+  const ev = radInfo.real_event, rule = radInfo.sep_rule;
+  ui("storm-text").innerHTML = `Return home: <b>${TERMS.min(backS)}</b>` +
+    `${beyond ? " (beyond the 30 min line)" : ""}, the amber dashed line. ` +
+    (short ? `<b>Not enough energy for it.</b> ` : "") +
+    `Radiation on the way back: ${doseBack.toFixed(1)} µGy.`;
+  ui("storm-banner").hidden = false;
+  if (sepPath) fitStorm();
+  renderLegend();
+  ui("sep-info").innerHTML = `<div class="alert">` + oneLine(
+    `${icon("warn")} <b>Solar storm:</b> return home, ${TERMS.min(backS)}${beyond ? " (beyond the 30 min line)" : ""}` +
+    `${short ? ", not enough energy for it" : ""}. See the map.`,
+    `The amber dashed line on the map is the way home. ` +
+    `Dose on the way back: <b>${doseBack.toFixed(1)} µGy</b> (${doseCalm.toFixed(1)} µGy without the storm). ` +
+    `<span class="muted">${sc.measured ? "Measured event" : "Hypothetical scaling of the real event"} · ` +
+    `alarm rule: rate &gt; ${rule.k_on}× the ${rule.baseline}, ${rule.n_on} observations in a row ` +
+    `(real alarm ${ev.alarm_delay_min.toFixed(0)} min after onset).</span>`) + `</div>`;
+}
+
+function dismissStorm() {
+  sepPath = null;
+  ui("storm-banner").hidden = true;
+  ui("sep-info").innerHTML = "";
+  redraw();
+}
+// Frame the astronaut, the way home and the habitat together.
+function fitStorm() {
+  const pts = [...sepPath.geometry.coordinates, habitatXY()], xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), m = 80;
+  fitBounds(Math.min(...xs) - m, Math.min(...ys) - m, Math.max(...xs) + m, Math.max(...ys) + m);
+}
+
+// ---------------------------------------------------------------------------
+// Route profile (guide section 32): walk the planned route vertex by vertex.
+// The energy bar shows used, needed-to-return (R(v) from E4) and free energy
+// against the usable budget; it can only shrink as the astronaut walks. On
+// pause, the walkback lines are recomputed from that point with the energy left.
+// ---------------------------------------------------------------------------
+let routeProf = null, routeIdx = 0, playTimer = null;
+
+function routeFeature() {
+  return planFC && planFC.features.find(f => f.properties.kind === "route");
+}
+
+// The Walk tab's answer, always at the top: time back against the 30 min line and the
+// energy that would be spare after returning, for the rehearsal point or a probed one.
+function setWalkStatus(backS, spareWh, where) {
+  const box = ui("walk-status");
+  if (backS == null || !isFinite(backS)) { box.hidden = true; return; }
+  box.hidden = false;
+  // The bar is the margin left to the 30 min line: full is good, empty is the limit.
+  const over = backS > TERMS.LIMITS.homeS, tight = backS > TERMS.LIMITS.homeLowS, state = over ? "out" : tight ? "low" : "ok";
+  ui("ws-back").textContent = TERMS.minutes(backS);
+  ui("ws-spare").textContent = spareWh == null ? "–" : Math.max(0, spareWh).toFixed(0);
+  const marginMin = Math.max(0, (1800 - backS) / 60);
+  const bar = ui("ws-bar");
+  bar.style.width = `${Math.min(100, 100 * marginMin / 30)}%`;
+  bar.className = state === "ok" ? "" : state;
+  ui("ws-track").classList.toggle("out", over);
+  ui("ws-track").setAttribute("aria-valuenow", marginMin.toFixed(1));
+  ui("ws-track").setAttribute("aria-valuetext", `${TERMS.word(state)}, ` + (over ? "over the 30 minute line" : `${marginMin.toFixed(0)} minutes of margin`));
+  const word = ui("ws-word");
+  word.textContent = state === "out" ? TERMS.word(state) : `${TERMS.word(state)} · ${marginMin.toFixed(0)} min spare`;
+  word.className = state === "ok" ? "" : state;
+  box.classList.toggle("bad", over || (spareWh != null && spareWh < 0));
+  ui("ws-where").innerHTML = (over ? `${icon("warn")} Beyond the 30 min of emergency oxygen. ` : "") +
+    (spareWh != null && spareWh < 0 ? `${icon("warn")} Not enough energy to get back. ` : "") + (where || "");
+}
+
+function setupProfile() {
+  const f = routeFeature();
+  routeProf = f && f.properties.used_wh ? {coords: f.geometry.coordinates, ...f.properties} : null;
+  ui("profile").hidden = !routeProf;
+  ui("walk-empty").hidden = Boolean(routeProf) || Boolean(astronaut);
+  if (!routeProf) { setWalkStatus(null); return; }
+  ui("route-pos").max = routeProf.coords.length - 1;
+  ui("route-pos").value = 0;
+  showRouteIdx(0, true);
+}
+
+function showRouteIdx(i, settle) {
+  const r = routeProf; routeIdx = i;
+  const used = r.used_wh[i], rv = r.rv_wh[i], usable = r.usable_wh;
+  const free = Math.max(0, usable - used - rv);
+  const pct = v => `${Math.max(0, 100 * v / usable)}%`;
+  ui("bar-used").style.width = pct(used); ui("bar-rv").style.width = pct(rv); ui("bar-free").style.width = pct(free);
+  const t = r.t_s[i], mm = TERMS.clock;
+  const dose = radInfo ? (t / 3600) * radInfo.background_ugy_h : null;
+  ui("profile-info").innerHTML =
+    `<b style="color:var(--text)">${mm(t)}</b> of ${mm(r.t_s[r.t_s.length - 1])} · used ${used.toFixed(0)} Wh, ` +
+    `returning needs ${rv.toFixed(0)} Wh<br>` +
+    `Oxygen ${r.o2_used_l[i].toFixed(0)} L` + (dose !== null ? ` · radiation ${dose.toFixed(1)} µGy` : "");
+  setWalkStatus(r.rv_time_s[i], free, `On the plan, ${mm(t)} into the walk.`);
+  astronaut = r.coords[i];
+  ui("wb-energy").value = Math.round(usable - used);
+  redraw();
+  if (settle) requestWalkback();
+}
+
+function headingLayer() {
+  if (!routeProf || currentTab !== "walk") return [];
+  const c = routeProf.coords, i = routeIdx, j = Math.min(c.length - 1, i + 12);
+  if (j === i) return [];
+  const [x0, y0] = toWorld(...c[i]), [x1, y1] = toWorld(...c[j]);
+  const angle = -Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;   // world y grows down
+  const len = Math.hypot(x1 - x0, y1 - y0) || 1, off = [18 * (x1 - x0) / len, 18 * (y1 - y0) / len];  // just ahead of the dot
+  return [new TextLayer({id: "heading", data: [{p: c[i]}], getPosition: d => toWorld(...d.p),
+    getText: () => "➤", getAngle: angle, getSize: 22, getColor: [255, 255, 255],
+    characterSet: ["➤"], outlineWidth: 4, outlineColor: [0, 0, 0], fontSettings: {sdf: true},
+    getPixelOffset: off, updateTriggers: {getAngle: angle, getPixelOffset: off.join()}})];
+}
+
+const playLabel = playing => { ui("play-btn").innerHTML = playing ? `${icon("pause")} Pause` : `${icon("play")} Play`; };
+function togglePlay() {
+  if (!routeProf) return;
+  if (playTimer) { clearInterval(playTimer); playTimer = null; playLabel(false); showRouteIdx(routeIdx, true); return; }
+  playLabel(true);
+  const tick = 200;                                   // ms per frame
+  playTimer = setInterval(() => {
+    const r = routeProf, speed = Number(ui("play-speed").value);
+    const target = r.t_s[routeIdx] + speed * tick / 1000;
+    let i = routeIdx;
+    while (i < r.t_s.length - 1 && r.t_s[i] < target) i++;
+    ui("route-pos").value = i;
+    showRouteIdx(i, false);
+    if (i >= r.t_s.length - 1) togglePlay();
+  }, tick);
+}
+
+// Limits outside a sensible range are caught before the request, next to the field.
+const LIMIT_NAMES = {"max-min": "EVA length", "budget-wh": "Energy budget", "margin-pct": "Reserve", "o2-l": "Oxygen budget"};
+function checkLimits() {
+  for (const id of Object.keys(LIMIT_NAMES)) {
+    const el = ui(id);
+    const v = el.validity;                        // the range matters, not the spinner step
+    if (v.rangeUnderflow || v.rangeOverflow || v.valueMissing || v.badInput) {
+      ui("plan-inputs").open = true;
+      ui("plan-error").innerHTML = `${icon("warn")} ${LIMIT_NAMES[id]} must be between ${el.min} and ${el.max} ${el.nextElementSibling.textContent}.`;
+      el.focus();
+      return false;
+    }
+  }
+  ui("plan-error").textContent = "";
+  return true;
+}
+function renderInputsSummary() {
+  const r = Number(ui("margin-pct").value) || 0;
+  ui("inputs-summary").textContent = `· ${ui("max-min").value} min · ${ui("budget-wh").value} Wh · ${r} % reserve · ` +
+    (baseXY ? "habitat set" : "habitat at the centre");
+}
+
+let planning = false;
+async function requestPlan() {
+  const btn = ui("plan-btn");
+  if (planning || !checkLimits()) return;
+  // Busy, not disabled: a disabled button would drop the keyboard focus.
+  planning = true;
+  btn.setAttribute("aria-busy", "true"); btn.classList.add("busy");
+  btn.textContent = "Planning…";
+  const prevPlan = planFC;
+  // Say what is happening: the first plan builds the terrain graph and takes a while.
+  if (planFC) ui("plan-info").style.opacity = "0.45";
+  else ui("plan-info").innerHTML = '<div class="empty">Planning… the first plan takes 10–30 s while the terrain graph is built. Later ones take a few seconds.</div>';
+  // The habitat is a user input (team decision): the plan starts at the base set
+  // in the walkback panel, or at the box centre until one is set (illustrative).
+  const start = baseXY || [X0 + SIZE_M / 2, Y0 - SIZE_M / 2];
+  const body = {
+    start,
+    stations: stations.map(s => ({id: s.id, x: s.x, y: s.y, type: s.type, score: scoreOf(s),
+                                  service_time_min: s.service_time_min})),
+    energy_budget_wh: Number(ui("budget-wh").value) || 1000, gravity_m_s2: 3.71,
+    margin: (Number(ui("margin-pct").value) || 0) / 100,
+    max_duration_min: Number(ui("max-min").value) > 0 ? Number(ui("max-min").value) : null,
+    o2_budget_l: Number(ui("o2-l").value) > 0 ? Number(ui("o2-l").value) : null,
+    human_cost: ui("human-cost").checked,
+    apollo_speed_uses_signed_slope: true, service_energy_wh_per_min: null,
+    max_cell_slope_deg: blockLimit(),
+    solver: ui("solver").value,
+  };
+  try {
+    const res = await fetch("/plan", {method: "POST",
+      headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    if (!res.ok) {
+      const out = await res.json();
+      throw Object.assign(new Error(typeof out.detail === "string" ? out.detail : JSON.stringify(out.detail)),
+                          {diagnosis: out.diagnosis || null});
+    }
+    planFC = await res.json();
+    clearPlanStale();
+    if (sepPath) dismissStorm();                  // the storm path belonged to the previous walk
+    renderPlanSummary();
+    ui("plan-inputs").open = false;
+    ui("plan-badge").innerHTML = icon("check", "planned");
+    ui("fit-plan").hidden = false;
+    fitPlan();
+    {
+      const r = planFC.features.find(f => f.properties.kind === "route").properties;
+      const n = (r.visit_order || []).length;
+      announce(`Plan ready${n ? `: ${n} of ${stations.length} stations` : ""}` +
+        (r.time_s != null ? `, ${(r.time_s / 60).toFixed(0)} minutes` : "") +
+        (r.feasible === true ? ". The astronaut can get back from every point." : r.feasible === false ? ". Not enough energy to get back at some point." : "."));
+    }
+    checkRadio();
+    checkDeparture();
+    if (playTimer) togglePlay();
+    setupProfile();
+    redraw();
+  } catch (err) {
+    if (prevPlan) {
+      // A failed re-plan keeps the good plan, marked out of date, with the reason on top.
+      planFC = prevPlan;
+      renderPlanSummary();
+      planStale = false; markPlanStale();
+      ui("plan-info").insertAdjacentHTML("afterbegin",
+        `<div class="alert" style="margin-top:12px"><b>Not updated.</b> ${esc(planProblem(err.message, err.diagnosis))} The plan below is the previous one.</div>`);
+      announce(`Plan not updated. ${planProblem(err.message, err.diagnosis)}`);
+    } else {
+      planFC = null;
+      ui("plan-badge").textContent = "";
+      clearPlanStale();
+      ui("fit-plan").hidden = true;
+      ui("plan-info").innerHTML = `<div class="alert"><b>No plan.</b> ${esc(planProblem(err.message, err.diagnosis))}</div>`;
+      announce(`No plan. ${planProblem(err.message, err.diagnosis)}`);
+      ui("plan-radio").textContent = "";
+      setupProfile();
+    }
+    redraw();
+  } finally {
+    planning = false;
+    btn.removeAttribute("aria-busy"); btn.classList.remove("busy");
+    ui("plan-info").style.opacity = "";
+    btn.textContent = planFC ? "Plan again" : "Plan the walk";
+    btn.classList.toggle("secondary", Boolean(planFC));        // after a plan, "Rehearse" is the primary
+  }
+}
+
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+// What went wrong, in words that say what to change. With E5's diagnosis (#119) the reason
+// is the planner's own: which limit, by how much, and what would let the closest station fit.
+function planProblem(detail, diagnosis) {
+  const fromDiagnosis = diagnosisText(diagnosis);
+  if (fromDiagnosis) return fromDiagnosis;
+  const d = typeof detail === "string" ? detail : JSON.stringify(detail);
+  if (/no feasible tour|no station fits|no feasible route/i.test(d)) {
+    return "Nothing fits in these limits. Allow a longer walk or more energy, or move the habitat closer to the stations.";
+  }
+  if (/fails the walkback/i.test(d)) return "Every route that fits would leave too little energy to get back. Raise the energy budget or lower the reserve.";
+  return d;
+}
+
+// Plain words for E5's structured reason (code, exact, closest station, needs, available,
+// actions). The advice is for the closest station only: it never promises a bigger tour.
+function diagnosisText(g) {
+  if (!g || !g.code) return "";
+  const RES = {energy: "energy", o2: "O2", duration: "time"};
+  const UNIT = {energy: ["energy_wh", "Wh"], o2: ["o2_l", "L"], duration: ["duration_min", "min"]};
+  const num = v => (Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(1));
+  if (g.code === "insufficient_resources" && g.closest) {
+    const c = g.closest;
+    const gaps = (c.short || []).filter(r => UNIT[r]).map(r => {
+      const [k, u] = UNIT[r];
+      return `${RES[r]}: needs ${num(c.needs[k])} ${u}, ${num(c.available[k])} ${u} available`;
+    });
+    const keep = 1 - ((g.limits || {}).margin || 0), up = v => Math.ceil(v * 10) / 10;
+    const steps = (c.short || []).map(r =>
+      r === "energy" ? `an energy budget of at least ${up(c.needs.energy_wh / keep)} Wh with the same reserve`
+      : r === "o2" ? `an oxygen budget of at least ${up(c.needs.o2_l)} L`
+      : r === "duration" ? `a longest walk of at least ${Math.ceil(c.needs.duration_min)} min` : "").filter(Boolean);
+    const fix = steps.length
+      ? ` To fit ${c.id} alone you need ${steps.join(" and ")}; that is enough for ${c.id} only, not a promise of more stations.` : "";
+    return `Not even the closest station, ${c.id}, fits on its own (${gaps.join("; ")}).` + fix +
+      (g.exact ? "" : " The time is an estimate: the walk follows the least-energy path.");
+  }
+  if (g.code === "unreachable") return "No station can be reached on foot from the habitat and back. Move the habitat or the stations, or allow steeper cells.";
+  if (g.code === "search_incomplete") return "The search ran out of time before finding a tour. That does not prove there is none: try fewer stations.";
+  if (g.code === "walkback") return `Every route that fits would leave too little energy to get back (${num(g.deficit_wh || 0)} Wh short).` +
+    ((g.actions || []).length ? ` ${g.actions[0][0].toUpperCase()}${g.actions[0].slice(1)}.` : "");
+  if (g.code === "invalid_input") return g.message.charAt(0).toUpperCase() + g.message.slice(1) + ".";
+  return g.message || "";
+}
+
+// The plan in plain numbers: how many stations, how much of each limit it uses, the
+// visiting order, and whether the astronaut can always get back. Notes meant for the
+// team (which engine, which cost model) go under "Details".
+const PLAN_NOTES = [/^E5 tour:/, /^not visited within the limits/, /^service power assumed/, /^single-goal round trip/];
+
+function renderPlanSummary() {
+  const route = planFC.features.find(f => f.properties.kind === "route").properties, p = planFC.properties;
+  const goal = planFC.features.find(f => f.properties.kind === "goal");
+  const order = route.visit_order || (goal && goal.properties.station ? [goal.properties.station] : []);
+  const typeOf = id => (stations.find(s => s.id === id) || {}).type;
+  const left = stations.map(s => s.id).filter(id => !order.includes(id));
+  const warnings = (p.warnings || []).filter(w => !PLAN_NOTES.some(re => re.test(w)));
+  const notes = (p.warnings || []).filter(w => PLAN_NOTES.some(re => re.test(w)));
+  const hasNumbers = route.energy_wh != null;
+  const stat = (k, v, of, frac) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}${of ? ` <small>${of}</small>` : ""}</div>` +
+    (frac != null ? `<div class="meter"><i class="${frac > 1 ? "over" : ""}" style="width:${Math.min(100, 100 * frac).toFixed(0)}%"></i></div>` : "") + `</div>`;
+  const chip = route.feasible === true ? `<span class="chip ok">${icon("check")} The astronaut can get back from every point</span>`
+    : route.feasible === false ? `<span class="chip bad">${icon("warn")} Not enough energy to get back at some point</span>`
+    : `<span class="chip info">Sample route (Curiosity's path). Add stations to plan a walk.</span>`;
+  const timeMin = route.time_s != null ? route.time_s / 60 : null, limitMin = p.max_duration_min;
+  ui("plan-info").innerHTML = `<div style="margin-top:14px">${chip}</div>` +
+    `<div class="stats">` +
+      (order.length ? stat("Stations visited", order.length, `of ${stations.length}`) : "") +
+      (timeMin != null ? stat("Time", timeMin.toFixed(0), limitMin ? `of ${limitMin} min` : "min", limitMin ? timeMin / limitMin : null) : "") +
+      (hasNumbers ? stat(Number(ui("margin-pct").value) > 0 ? `Energy <small>(budget minus the ${Number(ui("margin-pct").value)} % reserve)</small>` : "Energy",
+                         route.energy_wh.toFixed(0), `of ${p.energy_usable_wh.toFixed(0)} Wh`, route.energy_wh / p.energy_usable_wh) : "") +
+      stat("Distance", (route.length_m / 1000).toFixed(2), "km") +
+    `</div>` +
+    (order.length ? `<div class="muted">Visiting order</div><div class="order">` +
+      order.map(id => `<span class="stop" style="border-color:${rgb(typeOf(id))}">${esc(id)}</span>`).join('<span class="sep">›</span>') + `</div>` : "") +
+    (order.length && left.length ? `<div class="muted">Left out, they do not fit in the limits: ${left.map(esc).join(", ")}. ` +
+      (limitMin && timeMin > 0.85 * limitMin ? "A longer walk would add more." : "") + `</div>` : "") +
+    warnings.map(w => `<div class="warn">${icon("warn")} ${esc(w)}</div>`).join("") +
+    (route.used_wh ? `<div class="btn-row"><button id="walk-it">${icon("play")} Rehearse</button></div>` +
+      `<div class="hint">The tablet guide, the 3D view and the wrist card are in step 4.</div>` : "") +
+    (route.solver || route.method ? `<div class="hint" id="plan-solver">Solver: ${esc(route.solver || route.method)}` +
+      (route.solver_runtime_s != null ? ` · ${route.solver_runtime_s} s` : "") + `</div>` : "") +
+    `<details class="more"><summary>Details</summary>` +
+      (hasNumbers ? `<div>Oxygen: about ${route.o2_l.toFixed(0)} L (estimated from the energy).</div>` : "") +
+      `<div>Planner: ${esc(p.source || "route")}.</div>` +
+      (p.cost_model ? `<div>Energy model: ${esc(p.cost_model)}.</div>` : "") +
+      notes.map(w => `<div>${esc(w)}.</div>`).join("") + `</details>`;
+  const go = ui("walk-it");
+  if (go) go.addEventListener("click", () => { showTab("walk"); ui("play-btn").focus(); if (!playTimer) togglePlay(); });
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar tabs: the order of work. Map-click modes are switched off when leaving a
+// tab, so a stray click never adds a station or moves the habitat.
+// ---------------------------------------------------------------------------
+let currentTab = "terrain";
+function showTab(name) {
+  currentTab = name;
+  document.querySelectorAll(".tabs [role=tab]").forEach(b => {
+    b.setAttribute("aria-selected", String(b.dataset.tab === name));
+    b.tabIndex = b.dataset.tab === name ? 0 : -1;
+  });
+  document.querySelectorAll(".tabpanel").forEach(p => { p.hidden = p.id !== `panel-${name}`; });
+  document.querySelectorAll(".click-mode").forEach(b => { b.checked = false; });
+  renderModeBanner();
+  document.querySelector(".panels").scrollTop = 0;
+  if (name === "walk" && (routeProf || wbFC)) { if (wbFC) fitWalk(); else walkFitPending = true; }
+  redraw();
+  try { localStorage.setItem("hud-tab", name); } catch { /* private window: the tab is just not remembered */ }
+}
+
+// What a click on the map will do right now, said on the map itself.
+function renderModeBanner() {
+  const on = activeMode();
+  if (!on) kbCursor = null;
+  const banner = ui("mode-banner");
+  banner.hidden = !on;
+  if (!on) return;
+  const label = ui("new-type").selectedOptions[0] ? ui("new-type").selectedOptions[0].textContent.toLowerCase() : "station";
+  const what = on.id === "add-mode" ? `Click the map to add a station: ${esc(label)}`
+    : on.id === "wb-mode" ? "Click the map to place the astronaut" : "Click the map to set the habitat";
+  banner.innerHTML = `${what} <kbd>Esc</kbd> <span class="muted" style="font-weight:400">· keyboard: Tab to the map, arrows, Enter</span>`;
+}
+
+// ---------------------------------------------------------------------------
+// Map legend: only what is drawn right now, in the words of the sidebar.
+// ---------------------------------------------------------------------------
+function renderLegend() {
+  if (!tiles) return;
+  const it = [], line = (c, t, cls = "") => it.push(`<div class="lg"><i class="${cls}" style="border-color:${c}"></i>${t}</div>`);
+  const fill = (bg, t) => it.push(`<div class="lg"><i class="fill" style="background:${bg}"></i>${t}</div>`);
+  const dot = (c, t) => it.push(`<div class="lg"><i class="dotk" style="background:${c}"></i>${t}</div>`);
+  if (planFC) line("#00c8ff", "Planned route");
+  if (ui("show-radio").checked && radioFC) line("#ff40c8", "Route with no direct radio");
+  if (sepPath) line("#ffb020", "Return home (storm)");
+  if (wbFC && currentTab === "walk") {
+    line("#ff3b30", "30 min from the habitat");
+    fill("rgba(6,8,12,.75)", "Out of reach with the energy left");
+    if (ui("show-radius").checked) it.push(`<div class="lg"><i style="border-top:2px dashed #fff"></i>Fixed-distance rule (circle)</div>`);
+  }
+  const types = [...new Set(stations.map(s => s.type))], SHORT = {ridge: "Ridge", hollow: "Hollow", contact: "Contact", curiosity: "Curiosity site"};
+  const dots = Object.keys(rubricMeta).filter(t => types.includes(t))
+    .map(t => `<div class="lg" title="${esc(rubricMeta[t].label)}"><i class="dotk" style="background:${rgb(t)}"></i>${esc(SHORT[t] || rubricMeta[t].label)}</div>`);
+  if (dots.length) it.push(`<div class="lg-grid">${dots.join("")}</div>`);
+  if (Object.keys(planOrder()).length) it.push(`<div class="lg muted">Numbered: in the plan · faded: left out</div>`);
+  dot("#ffffff", "Habitat");
+  if (astronaut && (currentTab === "walk" || sepPath)) dot("#ff40c8", "Astronaut");
+  if (blockLimit() !== null) it.push(`<div class="lg"><i class="hatch"></i>Too steep to cross (over ${blockLimit()}°)</div>`);
+  if (ui("show-radio").checked) fill("rgba(42,120,214,0.75)", "Habitat antenna in sight");
+  if (ui("show-slope").checked) fill("linear-gradient(90deg,#1a9850 0%,#fee08b 33.3%,#f46d43 66.7%,#a50026 100%)", currentTab === "walk" ? "Slope (faded here)" : "Slope, 0° to 45°");
+  if (ui("show-sand").checked) fill("rgb(250,246,235)", "Sand detected");
+  if (ui("show-rocks").checked) it.push(`<div class="lg"><i class="rock"></i>Boulders (bigger dot, more cover)</div>`);
+  if (ui("show-photos").checked && photoModel) {
+    dot("rgb(255,150,60)", "Rover photo stop");
+    if (openCard) fill("rgba(255,150,60,.4)", "Where the photo looks");
+  }
+  if (ui("show-thermal").checked) fill("linear-gradient(90deg,#2b0a56,#af315b,#fba007,#f1ee74)", "Night temperature, cool to warm");
+  if (ui("show-cost").checked) fill("linear-gradient(90deg,#000004,#8c2981,#fe9f6d,#fcfdbf)", "Walking cost, low to high");
+  ui("legend-items").innerHTML = it.join("");
+}
+
+// ---------------------------------------------------------------------------
+// Framing: fit a box of Mars metres into the visible stage, leaving room for the legend.
+// ---------------------------------------------------------------------------
+function fitBounds(xmin, ymin, xmax, ymax, duration = 650) {
+  const stage = ui("stage").getBoundingClientRect();
+  const legendOpen = ui("legend").open && stage.width > 700;
+  const pad = {l: legendOpen ? ui("legend").getBoundingClientRect().width + 28 : 24, r: 24, t: 60, b: 24};
+  const [wx0, wy0] = toWorld(xmin, ymax), [wx1, wy1] = toWorld(xmax, ymin);   // world y grows down
+  const w = Math.max(wx1 - wx0, 1), h = Math.max(wy1 - wy0, 1);
+  const fitScale = Math.min((stage.width - pad.l - pad.r) / w, (stage.height - pad.t - pad.b) / h);   // screen px per world unit
+  const zoom = Math.min(5, Math.log2(Math.max(0.05, fitScale)));
+  const scale = 2 ** zoom;
+  const target = [(wx0 + wx1) / 2 - (pad.l - pad.r) / 2 / scale, (wy0 + wy1) / 2 - (pad.t - pad.b) / 2 / scale, 0];
+  viewZoom = zoom;
+  deckgl.setProps({initialViewState: {target, zoom, minZoom: -1, maxZoom: 8,
+    transitionDuration: reduceMotion ? 0 : duration, transitionInterpolator: new deck.LinearInterpolator(["target", "zoom"])}});
+  redraw();
+}
+// Walk: the route and the astronaut, plus the stretch of the 30 min line nearest to them,
+// so the answer is in view without shrinking the walk to a speck.
+let walkFitPending = false;
+function fitWalk() {
+  const pts = [];
+  if (routeProf) pts.push(...routeProf.coords);
+  if (astronaut) pts.push(astronaut);
+  if (!pts.length) return fitAll();
+  const bx = [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])),
+              Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
+  const red = wbFC ? wbFC.features.filter(f => f.properties.kind === "emergency_time_boundary")
+    .flatMap(f => f.geometry.coordinates.flat()) : [];
+  const away = p => Math.hypot(Math.max(bx[0] - p[0], 0, p[0] - bx[2]), Math.max(bx[1] - p[1], 0, p[1] - bx[3]));
+  if (red.length) {
+    const near = Math.min(...red.map(away)), reach = Math.min(near + 120, 400);
+    if (near <= 400) pts.push(...red.filter(p => away(p) <= reach));
+  }
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), m = 50;
+  fitBounds(Math.min(...xs) - m, Math.min(...ys) - m, Math.max(...xs) + m, Math.max(...ys) + m);
+}
+function fitAll(duration) { fitBounds(X0, Y0 - SIZE_M, X0 + SIZE_M, Y0, duration); }
+function fitPlan() {
+  if (!planFC) return fitAll();
+  const pts = [];
+  for (const f of planFC.features) {
+    if (f.properties.kind === "route") pts.push(...f.geometry.coordinates);
+    else if (f.properties.kind === "start" || (f.properties.kind === "station" && f.properties.order)) pts.push(f.geometry.coordinates);
+  }
+  if (!pts.length) return fitAll();
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), m = 60;                  // 60 m margin around the walk
+  fitBounds(Math.min(...xs) - m, Math.min(...ys) - m, Math.max(...xs) + m, Math.max(...ys) + m);
+}
+
+// Every layer of the HUD lies on the same plane (z = 0). With the depth test on, coplanar
+// layers can fight on some GPUs (patches or flicker, e.g. after turning the slope tiles
+// off and on under the night thermal layer). Draw them in list order instead.
+const FLAT = {depthCompare: "always", depthWriteEnabled: false};
+
+function layers() {
+  const L = tiles.layers;
+  return withFlat([
+    tileLayer("ortho", "/" + L.ortho.url, 5, ui("show-ortho").checked),
+    tileLayer("hillshade", "/" + L.hillshade.url, 3, ui("show-hillshade").checked, 0.6),
+    // deck.gl applies opacity^(1/2.2) internally (gamma), so we raise the slider
+    // value to 2.2 to make the slider linear: 0.3 on the slider = 30 % slope.
+    // On Walk the slope fades so the red 30 min line is the only strong red on the map.
+    tileLayer("slope", "/" + L.slope.url, 3, ui("show-slope").checked,
+              Math.pow(Math.min(Number(ui("slope-opacity").value), currentTab === "walk" ? 0.18 : 1), 2.2)),
+    ...overlayLayers(),
+    ...planLayers(),
+    ...photoLayers(),                       // under the stations, so they stay on top
+    ...stationLayers(),
+    ...wbLayers(),
+    ...headingLayer(),
+  ]);
+}
+
+function withFlat(list) { return list.map(l => l.clone({parameters: {...(l.props.parameters || {}), ...FLAT}})); }
+
+const activeMode = () => [...document.querySelectorAll(".click-mode")].find(b => b.checked) || null;
+
+// A click on the map (or Enter on the keyboard crosshair) in the active mode.
+function handleMapClick(coord) {
+  const [x, y] = toMars(coord[0], coord[1]);
+  const inside = x >= X0 && x <= X0 + SIZE_M && y <= Y0 && y >= Y0 - SIZE_M;
+  if (ui("add-mode").checked) addStationAt(coord);
+  else if (ui("wb-mode").checked && inside) { astronaut = [x, y]; sepPath = null; requestWalkback(); }
+  else if (ui("base-mode").checked && inside) {
+    baseXY = [x, y]; renderHabitat(); markPlanStale(); redraw(); if (astronaut) requestWalkback();
+    announce(`Habitat set at ${(x - X0).toFixed(0)} metres east, ${(y - (Y0 - SIZE_M)).toFixed(0)} metres north.`);
+  }
+}
+
+// Keyboard placement: with a placing mode on and the map focused, arrows move a
+// crosshair (Shift for bigger steps) and Enter places, exactly like a click.
+function mapKeydown(e) {
+  if (!activeMode()) return;
+  const keys = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
+  if (!kbCursor) { const vs = deckgl.getViewports()[0]; kbCursor = vs ? vs.unproject([vs.width / 2, vs.height / 2]).slice(0, 2) : [0, 0]; }
+  if (keys[e.key]) {
+    e.preventDefault();
+    const step = (e.shiftKey ? 60 : 12) / 2 ** viewZoom;                       // pixels on screen, in world units
+    kbCursor = [kbCursor[0] + keys[e.key][0] * step, kbCursor[1] + keys[e.key][1] * step];
+    redraw();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    handleMapClick(kbCursor);
+  }
+}
+
+async function main() {
+  const meta = await (await fetch("/layers")).json();
+  tiles = meta.tiles;
+  const g = meta.grid;
+  S = tiles.tile_z0_m / 256;
+  X0 = g.bbox.xmin;
+  Y0 = g.bbox.ymax;
+  SIZE_M = g.bbox.xmax - g.bbox.xmin;
+
+  const centre = SIZE_M / S / 2;
+  // Open with the whole study area filling the stage, whatever the screen size, and
+  // slid to the right when the legend would otherwise cover its edge.
+  const stage = ui("stage").getBoundingClientRect(), world = SIZE_M / S;
+  viewZoom = Math.log2(Math.max(200, Math.min(stage.width, stage.height) * 0.92) / world);
+  const mapPx = world * 2 ** viewZoom, side = (stage.width - mapPx) / 2, legendPx = 264;
+  const slidePx = side < legendPx ? Math.max(0, Math.min(side - 14, legendPx - side)) : 0;
+  deckgl = new Deck({
+    parent: ui("map"),
+    views: new OrthographicView({id: "map", flipY: true}),
+    initialViewState: {target: [centre - slidePx / 2 ** viewZoom, centre, 0], zoom: viewZoom, minZoom: -1, maxZoom: 8},
+    controller: true,
+    onViewStateChange: ({viewState}) => {              // labels are decluttered per zoom level
+      if (Math.abs(viewState.zoom - viewZoom) > 0.2) { viewZoom = viewState.zoom; redraw(); }
+    },
+    onClick: info => {
+      // A rover photo dot opens its card, unless a placing mode owns the click.
+      if (!activeMode() && info.layer && info.layer.id === "rover-photos" && info.object) {
+        openPhotoCard(info.object.groupId);
+        return;
+      }
+      if (info.coordinate) handleMapClick(info.coordinate);
+    },
+    getCursor: ({isDragging, isHovering}) => isDragging ? "grabbing"
+      : ([...document.querySelectorAll(".click-mode")].some(e => e.checked) ? "crosshair" : isHovering ? "pointer" : "grab"),
+    pickingRadius: 4,                                   // the photo dots are small: easier to hit
+    layers: layers(),
+    onHover: info => {
+      if (!info.coordinate) return;
+      const [x, y] = toMars(info.coordinate[0], info.coordinate[1]);
+      const col = Math.floor(x - X0), row = Math.floor(Y0 - y);
+      const inside = row >= 0 && col >= 0 && row < g.grid_1m.height && col < g.grid_1m.width;
+      ui("readout").textContent = inside
+        ? `${(x - X0).toFixed(0)} m east · ${(y - (Y0 - SIZE_M)).toFixed(0)} m north`
+        : "Outside the study area";
+      ui("readout").title = inside ? `Mars CRS x ${x.toFixed(1)} m, y ${y.toFixed(1)} m · cell row ${row}, col ${col}` : "";
+    },
+  });
+  ui("status").textContent = `Study area ${SIZE_M / 1000} × ${SIZE_M / 1000} km in Gale crater · drag to move, scroll to zoom`;
+  ui("map").addEventListener("keydown", mapKeydown);
+  if (window.innerWidth < 860) ui("legend").open = false;        // small screens: the map first
+  renderHabitat();
+  playLabel(false);
+  document.querySelectorAll(".next .arrow").forEach(el => { el.outerHTML = icon("arrow"); });
+  document.querySelectorAll("a.btn.ext").forEach(el => el.insertAdjacentHTML("beforeend", " " + icon("ext")));
+  loadPhotos().catch(err => console.error(err));                  // background: the map does not wait for it
+}
+
+for (const id of ["show-ortho", "show-hillshade", "show-slope", "slope-opacity",
+                  "show-cost", "show-sand", "show-rocks", "show-thermal", "show-radio", "show-photos", "block-on", "block-slope",
+                  "show-radius"]) {
+  ui(id).addEventListener("input", redraw);
+}
+ui("show-photos").addEventListener("input", () => {
+  if (!ui("show-photos").checked) closePhotoCard();
+  renderPhotosNote();
+});
+ui("photo-close").innerHTML = icon("close");
+ui("photo-close").addEventListener("click", () => closePhotoCard());
+ui("show-cost").addEventListener("input", showCostLegend);
+ui("show-sand").addEventListener("input", () => { ui("sand-legend").hidden = !ui("show-sand").checked; });
+ui("show-rocks").addEventListener("input", async () => {
+  ui("rocks-legend").hidden = !ui("show-rocks").checked;
+  if (!ui("show-rocks").checked || ui("rocks-note").dataset.done) return;
+  const res = await fetch("/layers/rocks");
+  if (!res.ok) { ui("rocks-note").textContent = `Unavailable: ${(await res.json()).detail}`; return; }
+  const r = await res.json();
+  ui("rocks-note").dataset.done = "1";
+  ui("rocks-note").textContent = `Boulders cover ${r.mean_cover_pct.toFixed(2)} % of the area; ` +
+    `${r.share_of_squares_over_5pct_pct.toFixed(1)} % of the 10 m squares are over 5 % boulders. ` +
+    "Only boulders larger than about 1 m are seen. Shown for context: the route cost does not use them.";
+});
+ui("show-radio").addEventListener("input", async () => {
+  ui("radio-legend").hidden = !ui("show-radio").checked;
+  if (ui("radio-show")) ui("radio-show").textContent = `${ui("show-radio").checked ? "Hide" : "Show"} on the map`;
+  if (!ui("show-radio").checked) return;
+  const h = radioHabitat();
+  const res = await fetch(`/layers/comms?x=${h[0].toFixed(1)}&y=${h[1].toFixed(1)}`);
+  ui("radio-note").textContent = res.ok
+    ? `The antenna sees ${((await res.json()).coverage * 100).toFixed(1)} % of the box. Pure line of sight on the 1 m DEM (conservative).`
+    : `Unavailable: ${(await res.json()).detail}`;
+});
+ui("show-thermal").addEventListener("input", async () => {
+  ui("thermal-legend").hidden = !ui("show-thermal").checked;
+  if (!ui("show-thermal").checked || ui("thermal-note").dataset.done) return;
+  const res = await fetch("/thermal");
+  if (!res.ok) { ui("thermal-note").textContent = (await res.json()).detail; return; }
+  const t = await res.json(), c = t.check_vs_e8_sand;
+  ui("thermal-note").dataset.done = "1";
+  ui("thermal-note").textContent = `${t.mission}, ${t.m_per_px.toFixed(0)} m pixels: context, not a cost term.` +
+    (c ? ` Does it confirm E8's sand? No at this scale (rank correlation ${c.spearman_brightness_vs_sand.toFixed(2)} ` +
+         `over ${c.pixels} pixels): sand patches are smaller than one pixel.` : "");
+});
+ui("block-on").addEventListener("input", refreshBlockInfo);
+ui("block-slope").addEventListener("input", refreshBlockInfo);
+
+ui("plan-btn").addEventListener("click", requestPlan);
+ui("save-stations").addEventListener("click", saveStations);
+ui("load-candidates").addEventListener("click", loadCandidates);
+ui("load-lab").addEventListener("click", loadLabDataset);
+ui("load-e8").addEventListener("click", loadE8Stations);
+ui("sep-btn").addEventListener("click", simulateSEP);
+ui("storm-dismiss").addEventListener("click", () => { dismissStorm(); ui("sep-btn").focus(); });
+ui("fit-walk").addEventListener("click", fitWalk);
+ui("play-btn").addEventListener("click", togglePlay);
+// Before a plan exists, the walkback energy is the usable budget from the EVA limits.
+const syncBudget = () => { if (!routeProf) ui("wb-energy").value =
+  Math.round((Number(ui("budget-wh").value) || 0) * (1 - (Number(ui("margin-pct").value) || 0) / 100)); };
+ui("budget-wh").addEventListener("input", syncBudget);
+ui("margin-pct").addEventListener("input", syncBudget);
+syncBudget();
+ui("route-pos").addEventListener("input", e => showRouteIdx(Number(e.target.value), false));
+ui("route-pos").addEventListener("change", e => showRouteIdx(Number(e.target.value), true));
+// Only one map-click mode at a time.
+document.querySelectorAll(".click-mode").forEach(box => box.addEventListener("input", () => {
+  if (box.checked) document.querySelectorAll(".click-mode").forEach(o => { if (o !== box) o.checked = false; });
+  renderModeBanner();
+  // Keyboard users go straight to the map, where arrows move the crosshair and Enter places.
+  if (box.checked && box.matches(":focus-visible")) ui("map").focus();
+}));
+ui("new-type").addEventListener("input", renderModeBanner);
+window.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  const placing = activeMode();
+  document.querySelectorAll(".click-mode").forEach(b => { b.checked = false; });
+  renderModeBanner();
+  // Esc stops a placing mode first; with none on (or from inside the card) it closes the photo card.
+  if (openCard && (!placing || ui("photo-card").contains(document.activeElement))) closePhotoCard();
+});
+document.querySelectorAll(".tabs [role=tab]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+document.querySelector(".tabs").addEventListener("keydown", e => {          // arrows, Home and End move between tabs
+  const tabs = [...document.querySelectorAll(".tabs [role=tab]")], i = tabs.indexOf(document.activeElement);
+  if (i < 0) return;
+  const to = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length
+    : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
+  if (to === null) return;
+  e.preventDefault();
+  tabs[to].focus(); showTab(tabs[to].dataset.tab);
+});
+// Enter in a limit field plans; any change to the inputs marks the plan out of date.
+for (const id of ["max-min", "budget-wh", "margin-pct", "o2-l"]) {
+  ui(id).addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); requestPlan(); } });
+  ui(id).addEventListener("input", () => { markPlanStale(); renderInputsSummary(); if (!ui(id).validity.rangeUnderflow && !ui(id).validity.rangeOverflow) ui("plan-error").textContent = ""; });
+}
+ui("solver").addEventListener("change", markPlanStale);
+renderInputsSummary();
+for (const id of ["human-cost", "block-on", "block-slope"]) ui(id).addEventListener("input", markPlanStale);
+ui("replan").addEventListener("click", requestPlan);
+ui("habitat-reset").addEventListener("click", () => {
+  baseXY = null; renderHabitat(); markPlanStale(); redraw(); if (astronaut) requestWalkback();
+});
+ui("fit-plan").addEventListener("click", () => fitPlan());
+ui("fit-all").addEventListener("click", () => fitAll());
+// Space plays or pauses the rehearsal on the Walk tab (not while typing or on a control).
+window.addEventListener("keydown", e => {
+  if (e.code !== "Space" || currentTab !== "walk" || !routeProf) return;
+  if (e.target.closest && e.target.closest("input, select, textarea, button, a, summary, [role=tab]")) return;
+  e.preventDefault(); togglePlay();
+});
+document.querySelectorAll(".next[data-go]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.go)));
+ui("sources-chip").addEventListener("click", () => {
+  showTab("context"); ui("sources").open = true; ui("sources").scrollIntoView({block: "start"});
+});
+ui("show-radius").addEventListener("input", requestWalkback);
+{ let t = new URLSearchParams(location.search).get("tab"); if (!(t && ui(`panel-${t}`))) try { t = localStorage.getItem("hud-tab"); } catch { /* no storage */ } if (t && ui(`panel-${t}`)) showTab(t); }  // ?tab= (e.g. the landing page's Try it, #173) first, then the last tab used
+ui("wb-energy").addEventListener("change", requestWalkback);
+for (const id of ["block-on", "block-slope"]) ui(id).addEventListener("change", requestWalkback);
+window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+ui("wx-sol").addEventListener("change", loadWeather);
+ui("max-min").addEventListener("change", loadWeather);
+main().then(refreshBlockInfo).then(loadStations).then(loadLabDatasets).then(loadRadiation).then(loadSources).then(loadWeather).then(loadMinerals).catch(err => { ui("status").textContent = "Error: " + err.message; console.error(err); });
+</script>
+<script type="module" src="/tips.js"></script>
+</body>
+</html>

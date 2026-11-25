@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mars EVA Planner User Guide</title>
+<meta name="description" content="How to use the 2D planner of the Mars EVA Planner: every button, layer and readout, with annotated screenshots.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: a field manual. Sticky contents on the left, one column of steps on the right,
+   each step = annotated screenshot + numbered key. Accent = the planner's own orange. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --surface-2: #eaeef2; --line: #d3dae1;
+  --fg: #12181f; --muted: #55606c; --accent: #e8642c; --accent-text: #b04318; --accent-ink: #ffffff;
+  --ok: #1a7a43; --warn: #8f5600; --bad: #c0362c; --code-bg: #e9edf1;
+  --mark: #ff7a45; --mark-ink: #1a0f08;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1116; --surface: #151b22; --surface-2: #1c242d; --line: #2c3743;
+  --fg: #e7ecf1; --muted: #9aa6b2; --accent: #ff8a55; --accent-text: #ff8a55; --accent-ink: #1a0f08;
+  --ok: #4ccb84; --warn: #f2b34a; --bad: #ff7266; --code-bg: #1c242d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d1116; --surface: #151b22; --surface-2: #1c242d; --line: #2c3743;
+  --fg: #e7ecf1; --muted: #9aa6b2; --accent: #ff8a55; --accent-text: #ff8a55; --accent-ink: #1a0f08;
+  --ok: #4ccb84; --warn: #f2b34a; --bad: #ff7266; --code-bg: #1c242d; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--accent-text); text-underline-offset: 2px; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, kbd { font-family: var(--mono); font-size: .88em; background: var(--code-bg); border-radius: 4px; padding: .08em .35em; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.1rem, 4.2vw, 3.1rem); letter-spacing: -.01em; }
+h2 { font-size: 1.85rem; }
+h3 { font-size: 1.2rem; margin-top: 1.6rem; }
+p { margin: .7rem 0; max-width: 62ch; text-wrap: pretty; }
+.muted { color: var(--muted); }
+
+.page { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px; max-width: 1320px; margin: 0 auto; padding-block: 32px 80px; }
+@media (max-width: 960px) { .page { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+
+/* contents */
+nav.toc { position: sticky; top: max(16px, env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow: auto; }
+nav.toc .eyebrow { font: 600 .85rem/1 var(--body); color: var(--muted); margin: 0 0 10px 10px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: block; padding: 7px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; font-size: .95rem; }
+nav.toc a:hover, nav.toc a.on { background: var(--surface-2); }
+nav.toc a.on { color: var(--accent-text); font-weight: 600; }
+@media (max-width: 960px) { nav.toc { position: static; max-height: none; }
+  nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
+
+/* hero */
+header.hero { padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+header.hero p.lead { font-size: 1.18rem; color: var(--muted); max-width: 60ch; }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
+@media (max-width: 700px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.flow a { display: block; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); text-decoration: none; }
+.flow a:hover { border-color: var(--accent); }
+.flow .k { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-right: 4px; border-radius: 50%; background: var(--mark); color: var(--mark-ink); font: 700 .8em/1 var(--body); vertical-align: .1em; }
+.flow b { display: block; font-family: var(--display); font-size: 1.15rem; margin: 6px 0 2px; }
+.flow span { font-size: .9rem; color: var(--muted); }
+
+section.step { padding-top: 44px; }
+section.step > .head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+section.step h2 .num { display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; margin-right: 6px; border-radius: 50%;
+  background: var(--mark); color: var(--mark-ink); font: 700 .75em/1 var(--body); vertical-align: .12em; }
+
+/* annotated screenshots */
+figure.shot { margin: 18px 0 8px; }
+figure.shot .frame { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0b0e12;
+  box-shadow: 0 14px 40px -24px rgba(0,0,0,.55); }
+figure.shot .canvas { position: relative; }
+figure.shot img { display: block; width: 100%; height: auto; max-width: 100%; }
+figure.shot svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+figure.shot .hl { fill: rgba(255,122,69,.10); stroke: var(--mark); stroke-width: 3; }
+figure.shot .lead { stroke: var(--mark); stroke-width: 3; }
+figure.shot .arrowhead { fill: var(--mark); }
+figure.shot .badge { fill: var(--mark); stroke: #0b0e12; stroke-width: 3; }
+figure.shot .badge-n { fill: var(--mark-ink); font: 700 18px var(--mono); text-anchor: middle; }
+figure.shot .mark { transition: opacity .15s; }
+figure.shot.focus .mark { opacity: .18; }
+figure.shot.focus .mark.on { opacity: 1; }
+figure.shot.focus .mark.on .hl { fill: rgba(255,122,69,.22); stroke-width: 4; }
+figure.shot .zoom { display: inline-block; margin-top: 6px; font-size: .85rem; }
+figure.shot .swipe { display: none; margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
+@media (max-width: 700px) {
+  figure.shot .frame { overflow-x: auto; overscroll-behavior-x: contain; }
+  figure.shot .canvas { width: 900px; }
+  figure.shot .swipe { display: block; } }
+
+/* the numbered key under each screenshot */
+ol.keys { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+ol.keys li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line); cursor: default; }
+ol.keys li:hover, ol.keys li:focus-within, ol.keys li.on { border-color: var(--accent); }
+ol.keys .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 .9rem var(--mono);
+  background: var(--mark); color: var(--mark-ink); }
+ol.keys li > div > b:first-child { display: block; margin-bottom: 2px; }
+ol.keys p { margin: 0; font-size: .93rem; color: var(--muted); text-wrap: pretty; }
+
+/* callouts and tables */
+.note { border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  padding: 12px 16px; border-radius: 10px; margin: 16px 0; max-width: 62ch; text-wrap: pretty; }
+.note.warn { border-color: color-mix(in srgb, var(--warn) 50%, var(--line)); background: color-mix(in srgb, var(--warn) 8%, var(--surface)); }
+.note b:first-child { color: var(--accent-text); }
+.note.warn b:first-child { color: var(--warn); }
+.tablewrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; min-width: 560px; width: 100%; font-size: .94rem; background: var(--surface); border-radius: 10px; overflow: hidden; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 .78rem/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; font: 600 .82rem/1.3 var(--body); padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+
+/* learning routes */
+.routes { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-top: 16px; }
+.route { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+.route h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.route .time { font: 600 .8rem/1 var(--body); color: var(--accent-text); }
+.route ol { margin: 10px 0 0; padding-left: 20px; font-size: .94rem; }
+.route li { margin: 4px 0; text-wrap: pretty; }
+td, .route .see, .flow span { text-wrap: pretty; }
+.route .see { margin-top: 10px; font-size: .9rem; color: var(--muted); }
+
+pre.cmd { background: var(--code-bg); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: .9rem/1.5 var(--mono); }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: .88rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav class="toc" aria-label="Contents">
+  <div class="eyebrow">Contents</div>
+  <ol id="toc">
+    <li><a href="#start">Before you start</a></li>
+    <li><a href="#screen">The screen</a></li>
+    <li><a href="#terrain">1 · Terrain</a></li>
+    <li><a href="#stations">2 · Stations</a></li>
+    <li><a href="#plan">3 · Plan</a></li>
+    <li><a href="#walk">4 · Walk</a></li>
+    <li><a href="#context">Context</a></li>
+    <li><a href="#keys">Keyboard</a></li>
+    <li><a href="#routes">Learning routes</a></li>
+    <li><a href="#numbers">What the numbers mean</a></li>
+    <li><a href="#trouble">When something looks wrong</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Plan a walk on Mars you can come back from, checked at every step</h1>
+  <p class="lead">The user guide of the Mars EVA Planner's 2D planner. It shows every button on real screens. Each orange number points at a control; the same number in the list below the picture says what it does. Hover a list item, or move to it with the keyboard, to light up its control.</p>
+  <div class="flow" aria-label="The four steps">
+    <a href="#terrain"><b><span class="k">1</span> Terrain</b><span>Read slope, sand and blocked cells</span></a>
+    <a href="#stations"><b><span class="k">2</span> Stations</b><span>Mark where the science is</span></a>
+    <a href="#plan"><b><span class="k">3</span> Plan</b><span>Set the limits, get the walk</span></a>
+    <a href="#walk"><b><span class="k">4</span> Walk</b><span>Rehearse it and check safety</span></a>
+  </div>
+</header>
+
+<section class="step" id="start">
+  <div class="head"><h2>What the planner does, and how to open it</h2></div>
+  <p>You pick science stations inside a 2 × 2 km area of the boxwork in Gale crater, where Curiosity worked in 2025–2026, and you set what the EVA may spend: time, energy, a reserve and, if you want, oxygen. The planner returns the walk that collects the most science value within those limits, in the best order, and it checks one thing at every point of the route: <b>the energy already used plus the energy needed to walk back to the habitat fits the budget</b>. That rule is called <i>walkback</i>. The check is exact on the model's costs (walking energy on the 1 m terrain model, oxygen estimated from that energy); a body that works harder than the model is a separate risk, covered by the tablet's adaptive meter. Cells steeper than the slope limit are never crossed.</p>
+  <p>Everything runs on a local server. No internet connection is needed while you plan or walk.</p>
+  <pre class="cmd">python -m pip install -r api/requirements.txt     # once
+python -m api.check_data                          # says which data are missing and how to get them
+python -m uvicorn api.main:app --port 8000        # then open http://localhost:8000/</pre>
+  <h3>Tips appear the first time each step matters</h3>
+  <p>Small cards point at the next thing to do. <b>Got it</b> closes a card for good; doing what it suggests retires it too. Add <code>?tips=reset</code> to the address to see them all again, or <code>?tips=off</code> to hide them.</p>
+  <figure class="shot" data-shot="tips" data-shown="1,2,3"><div class="frame"><div class="canvas"><img src="img/tips.jpg" width="1440" height="900" alt="The planner with a tip card next to the side panel, pointing at the control it means." aria-describedby="keys-tips" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-tips" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="381" y="292" width="286" height="150" rx="7"/><line class="lead" x1="692" y1="367" x2="664" y2="367" marker-end="url(#arrow-tips)"/><circle class="badge" cx="710" cy="367" r="17"/><text class="badge-n" x="710" y="373">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="306" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="319" x2="345" y2="319" marker-end="url(#arrow-tips)"/><circle class="badge" cx="406" cy="319" r="17"/><text class="badge-n" x="406" y="325">2</text></g><g class="mark" data-n="3"><rect class="hl" x="427" y="398" width="225" height="32" rx="7"/><line class="lead" x1="540" y1="373" x2="540" y2="401" marker-end="url(#arrow-tips)"/><circle class="badge" cx="540" cy="355" r="17"/><text class="badge-n" x="540" y="361">3</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/tips.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-tips" data-shot="tips">
+    <li data-n="1"><span class="n">1</span><div><b>The tip</b><p>One short instruction and its place in the sequence (1 of 9).</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>The control it means</b><p>Outlined with a dashed line on the panel.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Got it</b><p>Closes the tip; it does not come back.</p></div></li>
+  </ol>
+</section>
+
+<section class="step" id="screen">
+  <div class="head"><h2>The screen</h2></div>
+  <p>On the left, the panel with the steps; on the right, the map of the area. Work through the tabs from left to right. Each tab ends with a <b>Next</b> button that takes you to the following one.</p>
+  <figure class="shot" data-shot="overview" data-shown="1,2,3,4,5,6,7"><div class="frame"><div class="canvas"><img src="img/overview.jpg" width="1440" height="900" alt="The planner: side panel with the step tabs on the left, the map of the 2 by 2 km area on the right." aria-describedby="keys-overview" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-overview" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="-3" y="118" width="377" height="45" rx="7"/><line class="lead" x1="388" y1="140" x2="371" y2="140" marker-end="url(#arrow-overview)"/><circle class="badge" cx="406" cy="140" r="17"/><text class="badge-n" x="406" y="146">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="170" width="335" height="645" rx="7"/><line class="lead" x1="388" y1="493" x2="345" y2="493" marker-end="url(#arrow-overview)"/><circle class="badge" cx="406" cy="493" r="17"/><text class="badge-n" x="406" y="499">2</text></g><g class="mark" data-n="3"><rect class="hl" x="369" y="-3" width="1074" height="906" rx="7"/><circle class="badge" cx="412" cy="40" r="17"/><text class="badge-n" x="412" y="46">3</text></g><g class="mark" data-n="4"><rect class="hl" x="383" y="740" width="236" height="149" rx="7"/><line class="lead" x1="644" y1="814" x2="616" y2="814" marker-end="url(#arrow-overview)"/><circle class="badge" cx="662" cy="814" r="17"/><text class="badge-n" x="662" y="820">4</text></g><g class="mark" data-n="5"><rect class="hl" x="1329" y="11" width="100" height="46" rx="7"/><line class="lead" x1="1304" y1="34" x2="1332" y2="34" marker-end="url(#arrow-overview)"/><circle class="badge" cx="1286" cy="34" r="17"/><text class="badge-n" x="1286" y="40">5</text></g><g class="mark" data-n="6"><rect class="hl" x="1241" y="854" width="188" height="35" rx="7"/><line class="lead" x1="1216" y1="871" x2="1244" y2="871" marker-end="url(#arrow-overview)"/><circle class="badge" cx="1198" cy="871" r="17"/><text class="badge-n" x="1198" y="877">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="82" width="196" height="31" rx="7"/><line class="lead" x1="388" y1="98" x2="206" y2="98" marker-end="url(#arrow-overview)"/><circle class="badge" cx="406" cy="98" r="17"/><text class="badge-n" x="406" y="104">7</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/overview.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-overview" data-shot="overview">
+    <li data-n="1"><span class="n">1</span><div><b>Tabs</b><p>1 Terrain, 2 Stations, 3 Plan, 4 Walk, and Context. A check mark on Plan means there is a plan; a dot means it is out of date.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Panel of the current step</b><p>Everything you set for that step. Long explanations are folded under <i>More</i>.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Map</b><p>Drag to move, scroll to zoom. Stations, the habitat, the route and the safety lines are drawn here.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>On the map</b><p>The legend lists only what is drawn right now. Click the title to fold it.</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>Fit plan · Whole area</b><p>Zoom to the planned walk, or back to the whole 2 × 2 km area.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Cell readout</b><p>Move the cursor over the map to read where it is: metres east and north of the area's south-west corner (hover the readout for the map coordinates and the cell).</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Data sources</b><p>Which missions and data types feed the map. Opens the list in the Context tab.</p></div></li>
+  </ol>
+  <div class="note"><b>Units.</b> Positions are metres in the Mars map projection of the terrain model. Energy is in Wh, time in minutes, oxygen in litres, dose in µGy.</div>
+</section>
+
+<section class="step" id="terrain">
+  <div class="head"><h2><span class="num">1</span> Terrain: read the ground first</h2></div>
+  <p>Before choosing anything, look at where the ground is steep, where the sand is, and which cells nobody should cross. Switch layers on and off with their boxes; a slider under a layer sets its transparency or its limit.</p>
+  <figure class="shot" data-shot="terrain" data-shown="1,2,3,4,5,6,7,8,9,10,11"><div class="frame"><div class="canvas"><img src="img/terrain.jpg" width="1440" height="900" alt="Step 1, Terrain: the list of map layers and the slope limit on the left, the slope map on the right." aria-describedby="keys-terrain" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-terrain" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="13" y="251" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="265" x2="345" y2="265" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="265" r="17"/><text class="badge-n" x="406" y="271">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="279" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="304" x2="345" y2="302" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="305" r="17"/><text class="badge-n" x="406" y="311">2</text></g><g class="mark" data-n="3"><rect class="hl" x="13" y="306" width="335" height="26" rx="7"/><line class="lead" x1="389" y1="340" x2="345" y2="329" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="345" r="17"/><text class="badge-n" x="406" y="351">3</text></g><g class="mark" data-n="4"><rect class="hl" x="13" y="445" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="458" x2="345" y2="458" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="458" r="17"/><text class="badge-n" x="406" y="464">4</text></g><g class="mark" data-n="5"><rect class="hl" x="38" y="498" width="310" height="24" rx="7"/><line class="lead" x1="388" y1="510" x2="345" y2="510" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="510" r="17"/><text class="badge-n" x="406" y="516">5</text></g><g class="mark" data-n="6"><rect class="hl" x="13" y="523" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="549" x2="345" y2="546" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="550" r="17"/><text class="badge-n" x="406" y="556">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="621" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="634" x2="345" y2="634" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="634" r="17"/><text class="badge-n" x="406" y="640">7</text></g><g class="mark" data-n="8"><rect class="hl" x="13" y="649" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="674" x2="345" y2="672" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="674" r="17"/><text class="badge-n" x="406" y="680">8</text></g><g class="mark" data-n="9"><rect class="hl" x="13" y="720" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="733" x2="345" y2="733" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="733" r="17"/><text class="badge-n" x="406" y="739">9</text></g><g class="mark" data-n="10"><rect class="hl" x="13" y="747" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="772" x2="345" y2="771" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="773" r="17"/><text class="badge-n" x="406" y="779">10</text></g><g class="mark" data-n="11"><rect class="hl" x="13" y="775" width="335" height="26" rx="7"/><line class="lead" x1="389" y1="809" x2="345" y2="798" marker-end="url(#arrow-terrain)"/><circle class="badge" cx="406" cy="813" r="17"/><text class="badge-n" x="406" y="819">11</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/terrain.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-terrain" data-shot="terrain">
+    <li data-n="1"><span class="n">1</span><div><b>Photo from orbit</b><p>HiRISE at 25 cm per pixel. The only layer that shows the boxwork ridges (bright lines) and the dark grey-blue sand.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Shaded relief</b><p>Light and shadow from the 1 m terrain model: knolls and scarps. It does not resolve the 1–3 m ridges.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Slope</b><p>Steepest slope of each cell: green 0°, yellow 15°, orange 30°, red 45° or more. The slider sets its transparency.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Never cross cells steeper than N°</b><p>The cells the planner will never step on, drawn as a dark hatch. Default 30°. This is the setting that changes routes the most.</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>How much is blocked</b><p>"12.4 % of the area is off limits" at 30°. At 20° about 30 % is blocked.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Sand detected</b><p>Share of each 1 m cell detected as sand. When it marks sand it is right about 92 % of the time, but it misses most of the sand.</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Boulders</b><p>Dots on 10 m squares: the bigger the dot, the more boulder cover. Boulders larger than about 1 m. Shown for context; the route cost does not use them.</p></div></li>
+    <li data-n="8"><span class="n">8</span><div><b>Walking cost</b><p>Wh to cross each 1 m cell. The cheapest metre is a gentle descent, not flat ground.</p></div></li>
+    <li data-n="9"><span class="n">9</span><div><b>Radio coverage</b><p>Cells from which a suit radio sees the habitat antenna, and the stretches of the route with no direct radio. Line of sight on the terrain model: cautious.</p></div></li>
+    <li data-n="10"><span class="n">10</span><div><b>Night temperature</b><p>Mars Odyssey night infrared at 81 m. Context only.</p></div></li>
+    <li data-n="11"><span class="n">11</span><div><b>Rover photos</b><p>Where Curiosity's Navcam photos were taken and where each one looks. Needs the photo catalogue on the server; without it the box says "Unavailable" and the rest works.</p></div></li>
+  </ol>
+  <div class="note warn"><b>Changing the slope limit</b> marks an existing plan as out of date. Plan again to see the new route.</div>
+</section>
+
+<section class="step" id="stations">
+  <div class="head"><h2><span class="num">2</span> Stations: mark where the science is</h2></div>
+  <p>A station is a place worth visiting. Each one has a type, a work time (minutes of service at the station) and a science value. The planner visits as much value as fits in the limits.</p>
+  <figure class="shot" data-shot="stations" data-shown="1,2,3,4,5,6,7,8"><div class="frame"><div class="canvas"><img src="img/stations.jpg" width="1440" height="900" alt="Step 2, Stations: station type, load buttons, the folded Advanced section and the stations table." aria-describedby="keys-stations" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-stations" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="47" y="251" width="301" height="37" rx="7"/><line class="lead" x1="388" y1="270" x2="345" y2="270" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="270" r="17"/><text class="badge-n" x="406" y="276">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="289" width="335" height="43" rx="7"/><line class="lead" x1="388" y1="311" x2="345" y2="311" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="311" r="17"/><text class="badge-n" x="406" y="317">2</text></g><g class="mark" data-n="3"><rect class="hl" x="13" y="334" width="335" height="44" rx="7"/><line class="lead" x1="388" y1="356" x2="345" y2="356" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="356" r="17"/><text class="badge-n" x="406" y="362">3</text></g><g class="mark" data-n="4"><rect class="hl" x="13" y="382" width="335" height="24" rx="7"/><line class="lead" x1="388" y1="396" x2="345" y2="396" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="396" r="17"/><text class="badge-n" x="406" y="402">4</text></g><g class="mark" data-n="5"><rect class="hl" x="13" y="409" width="335" height="42" rx="7"/><line class="lead" x1="388" y1="436" x2="345" y2="436" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="436" r="17"/><text class="badge-n" x="406" y="442">5</text></g><g class="mark" data-n="6"><rect class="hl" x="13" y="496" width="335" height="147" rx="7"/><line class="lead" x1="388" y1="570" x2="345" y2="570" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="570" r="17"/><text class="badge-n" x="406" y="576">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="727" width="335" height="176" rx="7"/><line class="lead" x1="388" y1="815" x2="345" y2="815" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="815" r="17"/><text class="badge-n" x="406" y="821">7</text></g><g class="mark" data-n="8"><rect class="hl" x="13" y="795" width="136" height="44" rx="7"/><line class="lead" x1="388" y1="854" x2="146" y2="836" marker-end="url(#arrow-stations)"/><circle class="badge" cx="406" cy="855" r="17"/><text class="badge-n" x="406" y="861">8</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/stations.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-stations" data-shot="stations">
+    <li data-n="1"><span class="n">1</span><div><b>Type</b><p>Boxwork ridge, Hollow between ridges, Contact between units, or Curiosity measurement site. New stations take this type.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>＋ Add stations by clicking the map</b><p>Turns on placing: every click on the map adds a station of the chosen type.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Load Curiosity sites</b><p>Adds the places where Curiosity drilled.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Advanced</b><p>Folded: the science values and the sites found by the boxwork detector.</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>Load AI-found sites</b><p>Adds sand–rock contacts found on the orbital photo. They are added unsaved.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Science value by type</b><p>Points per type: ridge 5, hollow 4, contact 4, Curiosity site 3. Edit them and the next plan follows.</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Stations table</b><p>Id, type, work time and value of every station; change them in place or remove a row with ×. A "?" after an id marks a rough position (some of the loaded Curiosity sites).</p></div></li>
+    <li data-n="8"><span class="n">8</span><div><b>Save stations</b><p>Keeps the list for next time. Plans already use the list without saving.</p></div></li>
+  </ol>
+  <h3>Placing on the map</h3>
+  <p>While a placing mode is on, a banner on the map says what a click will do. <kbd>Esc</kbd> stops it. Without a mouse: <kbd>Tab</kbd> to the map, move the cross-hair with the arrow keys (<kbd>Shift</kbd> for bigger steps) and press <kbd>Enter</kbd>.</p>
+  <figure class="shot" data-shot="placing" data-shown="1,2"><div class="frame"><div class="canvas"><img src="img/placing.jpg" width="1440" height="900" alt="Placing a station: the add mode is on and a banner on the map says what a click will do." aria-describedby="keys-placing" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-placing" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="13" y="289" width="335" height="43" rx="7"/><line class="lead" x1="388" y1="311" x2="345" y2="311" marker-end="url(#arrow-placing)"/><circle class="badge" cx="406" cy="311" r="17"/><text class="badge-n" x="406" y="317">1</text></g><g class="mark" data-n="2"><rect class="hl" x="636" y="11" width="540" height="62" rx="7"/><line class="lead" x1="1201" y1="42" x2="1173" y2="42" marker-end="url(#arrow-placing)"/><circle class="badge" cx="1219" cy="42" r="17"/><text class="badge-n" x="1219" y="48">2</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/placing.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-placing" data-shot="placing">
+    <li data-n="1"><span class="n">1</span><div><b>The mode is on</b><p>The button stays pressed while placing.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Banner</b><p>"Click the map to add a station: boxwork ridge", with the keyboard hint.</p></div></li>
+  </ol>
+  <div class="note warn"><b>Save rewrites the whole list.</b> Saving stores exactly what is loaded now, values included. If you loaded the AI-found sites or edited values for a test, reload the page before saving.</div>
+</section>
+
+<section class="step" id="plan">
+  <div class="head"><h2><span class="num">3</span> Plan: set the limits and get the walk</h2></div>
+  <p>Say where the walk starts and what it may spend. The planner chooses which stations fit and in what order to visit them, and checks the way back at every point.</p>
+  <figure class="shot" data-shot="plan-inputs" data-shown="1,2,3,4,5,6,7,8"><div class="frame"><div class="canvas"><img src="img/plan-inputs.jpg" width="1440" height="900" alt="Step 3, Plan: the habitat, the limits (EVA length, energy budget, reserve) and the Plan the walk button." aria-describedby="keys-plan-inputs" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-plan-inputs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="226" y="292" width="122" height="39" rx="7"/><line class="lead" x1="389" y1="345" x2="345" y2="328" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="351" r="17"/><text class="badge-n" x="406" y="357">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="298" width="209" height="26" rx="7"/><line class="lead" x1="388" y1="311" x2="219" y2="311" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="311" r="17"/><text class="badge-n" x="406" y="317">2</text></g><g class="mark" data-n="3"><rect class="hl" x="220" y="376" width="90" height="37" rx="7"/><line class="lead" x1="388" y1="394" x2="307" y2="394" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="394" r="17"/><text class="badge-n" x="406" y="400">3</text></g><g class="mark" data-n="4"><rect class="hl" x="220" y="414" width="90" height="37" rx="7"/><line class="lead" x1="388" y1="434" x2="307" y2="434" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="434" r="17"/><text class="badge-n" x="406" y="440">4</text></g><g class="mark" data-n="5"><rect class="hl" x="220" y="451" width="90" height="37" rx="7"/><line class="lead" x1="388" y1="474" x2="307" y2="474" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="474" r="17"/><text class="badge-n" x="406" y="480">5</text></g><g class="mark" data-n="6"><rect class="hl" x="220" y="542" width="90" height="37" rx="7"/><line class="lead" x1="388" y1="560" x2="307" y2="560" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="560" r="17"/><text class="badge-n" x="406" y="566">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="580" width="335" height="24" rx="7"/><line class="lead" x1="388" y1="600" x2="345" y2="600" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="600" r="17"/><text class="badge-n" x="406" y="606">7</text></g><g class="mark" data-n="8"><rect class="hl" x="13" y="647" width="335" height="44" rx="7"/><line class="lead" x1="388" y1="669" x2="345" y2="669" marker-end="url(#arrow-plan-inputs)"/><circle class="badge" cx="406" cy="669" r="17"/><text class="badge-n" x="406" y="675">8</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/plan-inputs.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-plan-inputs" data-shot="plan-inputs">
+    <li data-n="1"><span class="n">1</span><div><b>Set on the map</b><p>Click the map to move the habitat. A habitat on a blocked or cut-off cell is moved to the nearest valid one, and the plan says by how much.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Where the habitat is</b><p>"Centre of the area" by default. <b>Back to the centre</b> appears once you move it.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>EVA length</b><p>Maximum duration in minutes, station work included.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Energy budget</b><p>Suit energy for the walk, from 50 to 2,800 Wh (a full suit is about 2,800).</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>Reserve kept unused</b><p>Part of the budget that is never planned. Default 10 %.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Oxygen budget</b><p>Under <i>More options</i>. Metabolic oxygen estimated from the energy; 0 means no limit.</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Charge extra energy on sand</b><p>Uses the sand price learned from Curiosity's route, up to +11.5 % on sand.</p></div></li>
+    <li data-n="8"><span class="n">8</span><div><b>Plan the walk</b><p>Or press <kbd>Enter</kbd> in any field. The first plan takes 10–30 s while the terrain graph is built; later ones are fast.</p></div></li>
+  </ol>
+
+  <h3>Reading the plan</h3>
+  <p>Example: 120 min, 1,000 Wh, 10 % reserve, habitat at the centre, the 13 saved stations.</p>
+  <figure class="shot" data-shot="plan-result" data-shown="1,2,3,4,5,6,7,8"><div class="frame"><div class="canvas"><img src="img/plan-result.jpg" width="1440" height="900" alt="A plan: the guarantee chip, what it spends, the visiting order, radio and best time to leave, and the route on the map." aria-describedby="keys-plan-result" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-plan-result" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="13" y="220" width="335" height="47" rx="7"/><line class="lead" x1="388" y1="243" x2="345" y2="243" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="243" r="17"/><text class="badge-n" x="406" y="249">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="325" width="297" height="30" rx="7"/><line class="lead" x1="388" y1="340" x2="307" y2="340" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="340" r="17"/><text class="badge-n" x="406" y="346">2</text></g><g class="mark" data-n="3"><rect class="hl" x="13" y="361" width="335" height="136" rx="7"/><line class="lead" x1="388" y1="429" x2="345" y2="429" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="429" r="17"/><text class="badge-n" x="406" y="435">3</text></g><g class="mark" data-n="4"><rect class="hl" x="13" y="525" width="335" height="54" rx="7"/><line class="lead" x1="388" y1="553" x2="345" y2="553" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="553" r="17"/><text class="badge-n" x="406" y="559">4</text></g><g class="mark" data-n="5"><rect class="hl" x="13" y="722" width="335" height="86" rx="7"/><line class="lead" x1="388" y1="765" x2="345" y2="765" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="765" r="17"/><text class="badge-n" x="406" y="771">5</text></g><g class="mark" data-n="6"><rect class="hl" x="13" y="812" width="335" height="68" rx="7"/><line class="lead" x1="388" y1="846" x2="345" y2="846" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="846" r="17"/><text class="badge-n" x="406" y="852">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="624" width="335" height="44" rx="7"/><line class="lead" x1="388" y1="646" x2="345" y2="646" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="406" cy="646" r="17"/><text class="badge-n" x="406" y="652">7</text></g><g class="mark" data-n="8"><rect class="hl" x="1268" y="16" width="68" height="36" rx="7"/><line class="lead" x1="1361" y1="34" x2="1333" y2="34" marker-end="url(#arrow-plan-result)"/><circle class="badge" cx="1379" cy="34" r="17"/><text class="badge-n" x="1379" y="40">8</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/plan-result.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-plan-result" data-shot="plan-result">
+    <li data-n="1"><span class="n">1</span><div><b>Habitat and limits</b><p>After planning, the inputs fold into one line. Click it to change them; the button now reads <b>Plan again</b>.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>The guarantee</b><p><span class="pill ok">The astronaut can get back from every point</span>: the walkback holds at every point of the route.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>What it spends</b><p>Stations visited (8 of 13), time (111 of 120 min), energy (448 of 900 Wh after the reserve) and distance, each with a bar.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Visiting order</b><p>The stations in the order they are walked, and below them the ones left out because they do not fit.</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>Radio</b><p>"41 % of the walk without direct radio". <b>Show on the map</b> draws those stretches in magenta; <i>More</i> gives metres and minutes.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Best time to leave</b><p>Departures that keep the whole walk in sunlight (06:45–15:15 here); <i>More</i> gives the best one.</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Rehearse</b><p>Opens step 4 and plays the walk.</p></div></li>
+    <li data-n="8"><span class="n">8</span><div><b>Fit plan</b><p>Zooms the map to the walk. Numbers on the map give the visiting order.</p></div></li>
+  </ol>
+  <div class="note"><b>Time runs out first.</b> In this 2 × 2 km area a walk reaches its time limit long before its energy. Station work is most of the cost: on the full tour it is 61 % of the energy and 72 % of the time.</div>
+
+  <h3>When nothing fits</h3>
+  <p>The planner never invents a route. It says why there is no plan and what would fit. Example with a 60 Wh budget:</p>
+  <figure class="shot" data-shot="no-plan" data-shown="2"><div class="frame"><div class="canvas"><img src="img/no-plan.jpg" width="1440" height="900" alt="No plan: the message says which station and resource fall short and what budget would fit." aria-describedby="keys-no-plan" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-no-plan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="2"><rect class="hl" x="13" y="279" width="335" height="575" rx="7"/><line class="lead" x1="388" y1="566" x2="345" y2="566" marker-end="url(#arrow-no-plan)"/><circle class="badge" cx="406" cy="566" r="17"/><text class="badge-n" x="406" y="572">2</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/no-plan.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-no-plan" data-shot="no-plan">
+    <li data-n="2"><span class="n">2</span><div><b>Why, and what would fit</b><p>"Not even the closest station, C1, fits on its own (energy: needs 57 Wh, 54 Wh available). To fit C1 alone you need an energy budget of at least 63 Wh." The previous plan stays on screen, marked <span class="pill warn">Not updated</span>.</p></div></li>
+  </ol>
+  <div class="note warn"><b>Out of date.</b> Change a limit, a station or the habitat after planning and the plan is marked <span class="pill warn">OUT OF DATE</span> until you plan again.</div>
+</section>
+
+<section class="step" id="walk">
+  <div class="head"><h2><span class="num">4</span> Walk: rehearse it and check safety</h2></div>
+  <p>Play the walk and watch, at every moment, how long it takes to get home and how much energy is left. Pause anywhere to see how far the astronaut could still go.</p>
+  <figure class="shot" data-shot="walk" data-shown="1,2,3,4,5,6,7,8,9,10"><div class="frame"><div class="canvas"><img src="img/walk.jpg" width="1440" height="900" alt="Step 4, Walk: the walk card, the energy bar and player, and the route with the safety lines on the map." aria-describedby="keys-walk" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-walk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="28" y="248" width="21" height="41" rx="7"/><line class="lead" x1="388" y1="268" x2="46" y2="268" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="268" r="17"/><text class="badge-n" x="406" y="274">1</text></g><g class="mark" data-n="2"><rect class="hl" x="255" y="248" width="51" height="41" rx="7"/><line class="lead" x1="388" y1="304" x2="303" y2="286" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="308" r="17"/><text class="badge-n" x="406" y="314">2</text></g><g class="mark" data-n="3"><rect class="hl" x="162" y="287" width="171" height="35" rx="7"/><line class="lead" x1="389" y1="342" x2="330" y2="319" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="348" r="17"/><text class="badge-n" x="406" y="354">3</text></g><g class="mark" data-n="4"><rect class="hl" x="13" y="382" width="335" height="219" rx="7"/><line class="lead" x1="388" y1="492" x2="345" y2="492" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="492" r="17"/><text class="badge-n" x="406" y="498">4</text></g><g class="mark" data-n="5"><rect class="hl" x="13" y="520" width="79" height="38" rx="7"/><line class="lead" x1="388" y1="578" x2="89" y2="556" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="580" r="17"/><text class="badge-n" x="406" y="586">5</text></g><g class="mark" data-n="6"><rect class="hl" x="92" y="521" width="72" height="37" rx="7"/><line class="lead" x1="388" y1="540" x2="161" y2="540" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="540" r="17"/><text class="badge-n" x="406" y="546">6</text></g><g class="mark" data-n="7"><rect class="hl" x="13" y="561" width="110" height="41" rx="7"/><line class="lead" x1="388" y1="618" x2="120" y2="599" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="620" r="17"/><text class="badge-n" x="406" y="626">7</text></g><g class="mark" data-n="8"><rect class="hl" x="13" y="689" width="335" height="44" rx="7"/><line class="lead" x1="388" y1="711" x2="345" y2="711" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="711" r="17"/><text class="badge-n" x="406" y="717">8</text></g><g class="mark" data-n="9"><rect class="hl" x="13" y="734" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="751" x2="345" y2="751" marker-end="url(#arrow-walk)"/><circle class="badge" cx="406" cy="751" r="17"/><text class="badge-n" x="406" y="757">9</text></g><g class="mark" data-n="10"><rect class="hl" x="369" y="-3" width="1074" height="906" rx="7"/><circle class="badge" cx="412" cy="40" r="17"/><text class="badge-n" x="412" y="46">10</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/walk.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-walk" data-shot="walk">
+    <li data-n="1"><span class="n">1</span><div><b>Home in N min · limit 30</b><p>Time back to the habitat from where the walker is, against the 30 min of emergency oxygen.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Spare energy</b><p>Energy left after walking home from here. Below it: what returning costs on the plan.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Margin to the 30 min line</b><p>A word and a bar: <span class="pill ok">OK</span> <span class="pill warn">TURN SOON</span> <span class="pill bad">OVER 30 MIN</span>.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Energy bar and clock</b><p>Used, needed to return and spare; it only shrinks. The clock line reads "7:33 of 111:27 · used 41 Wh, returning needs 37 Wh", with oxygen and dose. Drag the slider to jump.</p></div></li>
+    <li data-n="5"><span class="n">5</span><div><b>Play / Pause</b><p>Or <kbd>Space</kbd>. Here the walk plays through the stations; the tablet guide and the 3D rehearsal stop at each one.</p></div></li>
+    <li data-n="6"><span class="n">6</span><div><b>Speed</b><p>×30, ×60 or ×180.</p></div></li>
+    <li data-n="7"><span class="n">7</span><div><b>Tablet · 3D · Wrist card</b><p>The same walk in the arm-tablet guide, in the 3D map, and as a printable step list.</p></div></li>
+    <li data-n="8"><span class="n">8</span><div><b>Show the safety lines</b><p>Red line: the cells from which the astronaut can still walk home in 30 min. Dark shade: out of reach with the energy left. Neither is a circle.</p></div></li>
+    <li data-n="9"><span class="n">9</span><div><b>Compare with a fixed-distance rule</b><p>Draws the classic 1.35 km and Apollo 1.7 km circles and says how much of them is not safe ("37 % of its 1.70 km circle cannot get back in 30 min").</p></div></li>
+    <li data-n="10"><span class="n">10</span><div><b>The walk on the map</b><p>Route, walker, numbered stations and the safety lines.</p></div></li>
+  </ol>
+
+  <h3>Try another point</h3>
+  <p>Place the astronaut anywhere, with any energy left, and see the way back from there.</p>
+  <figure class="shot" data-shot="probe" data-shown="1,3,4"><div class="frame"><div class="canvas"><img src="img/probe.jpg" width="1440" height="900" alt="Try another point: the astronaut placed on the map, with the time home and spare energy for that point." aria-describedby="keys-probe" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-probe" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="13" y="877" width="335" height="26" rx="7"/><line class="lead" x1="388" y1="879" x2="345" y2="880" marker-end="url(#arrow-probe)"/><circle class="badge" cx="406" cy="878" r="17"/><text class="badge-n" x="406" y="884">1</text></g><g class="mark" data-n="3"><rect class="hl" x="13" y="763" width="335" height="86" rx="7"/><line class="lead" x1="388" y1="806" x2="345" y2="806" marker-end="url(#arrow-probe)"/><circle class="badge" cx="406" cy="806" r="17"/><text class="badge-n" x="406" y="812">3</text></g><g class="mark" data-n="4"><rect class="hl" x="369" y="-3" width="1064" height="906" rx="7"/><circle class="badge" cx="412" cy="40" r="17"/><text class="badge-n" x="412" y="46">4</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/probe.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-probe" data-shot="probe">
+    <li data-n="3"><span class="n">3</span><div><b>The answer for that point</b><p>Time home and spare energy, computed from where you clicked ("At the point you placed, returning costs 18 Wh").</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>The placed astronaut</b><p>A magenta dot. The red line and the shade are redrawn for it. Set the energy with <b>Energy still in the suit</b> under <i>Try another point</i>.</p></div></li>
+  </ol>
+</section>
+
+<section class="step" id="context">
+  <div class="head"><h2>Conditions around the walk</h2></div>
+  <p>Radiation, weather and minerals inform the decision. None of them is part of the route cost.</p>
+  <figure class="shot" data-shot="context" data-shown="1,2,3,4"><div class="frame"><div class="canvas"><img src="img/context.jpg" width="1440" height="900" alt="Context: radiation with the storm simulator, and the weather of the chosen sol with its temperature chart." aria-describedby="keys-context" loading="lazy"><svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow-context" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs><g class="mark" data-n="1"><rect class="hl" x="13" y="246" width="335" height="60" rx="7"/><line class="lead" x1="388" y1="277" x2="345" y2="277" marker-end="url(#arrow-context)"/><circle class="badge" cx="406" cy="277" r="17"/><text class="badge-n" x="406" y="283">1</text></g><g class="mark" data-n="2"><rect class="hl" x="13" y="476" width="335" height="44" rx="7"/><line class="lead" x1="388" y1="498" x2="345" y2="498" marker-end="url(#arrow-context)"/><circle class="badge" cx="406" cy="498" r="17"/><text class="badge-n" x="406" y="504">2</text></g><g class="mark" data-n="3"><rect class="hl" x="220" y="557" width="90" height="37" rx="7"/><line class="lead" x1="388" y1="575" x2="307" y2="575" marker-end="url(#arrow-context)"/><circle class="badge" cx="406" cy="575" r="17"/><text class="badge-n" x="406" y="581">3</text></g><g class="mark" data-n="4"><rect class="hl" x="13" y="751" width="232" height="102" rx="7"/><line class="lead" x1="388" y1="802" x2="242" y2="802" marker-end="url(#arrow-context)"/><circle class="badge" cx="406" cy="802" r="17"/><text class="badge-n" x="406" y="808">4</text></g></svg></div></div><p class="swipe">Swipe sideways to see the whole screen.</p><a class="zoom" href="img/context.jpg" target="_blank" rel="noopener">Open the full-size screenshot</a></figure>
+  <ol class="keys" id="keys-context" data-shot="context">
+    <li data-n="1"><span class="n">1</span><div><b>Radiation</b><p>The normal dose rate measured by Curiosity (about 6.5 µGy per hour) and the dose over a sample walk. The background never changes the plan; a solar storm can.</p></div></li>
+    <li data-n="2"><span class="n">2</span><div><b>Simulate a solar storm</b><p>Pick a storm in the list and press: the rehearsal pauses where the walker is, an alert shows the way home from there (the same time as the walk card) and its dose, and the amber line draws it. If the way home does not fit the energy left, the alert says so.</p></div></li>
+    <li data-n="3"><span class="n">3</span><div><b>Sol of the walk</b><p>The Mars day to show: daylight hours, air and ground temperature, pressure and UV.</p></div></li>
+    <li data-n="4"><span class="n">4</span><div><b>Temperature through the campaign</b><p>Daily minimum and maximum while Curiosity explored the boxwork; the dashed line is the chosen sol.</p></div></li>
+  </ol>
+  <p>Further down: <b>Minerals seen from orbit</b> within 100 km (regional context) and <b>Data sources</b>, the list of every data type and mission.</p>
+  <div class="note"><b>Optional data.</b> Radiation, weather, minerals, night temperature and photos need their data releases. If one is missing the panel says so (for example "E12 outputs missing in data/e12/") and everything else works. <code>python -m api.check_data</code> gives the download commands.</div>
+</section>
+
+<section class="step" id="keys">
+  <div class="head"><h2>Keyboard</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Keys</th><th>Where</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd></td><td>On the tabs</td><td>Move between tabs</td></tr>
+      <tr><td><kbd>Tab</kbd>, arrows, <kbd>Enter</kbd></td><td>On the map, with a placing mode on</td><td>Move the cross-hair (<kbd>Shift</kbd> for bigger steps) and place a station, the habitat or the astronaut</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Anywhere</td><td>Stop placing; close the photo card</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>In a limit field</td><td>Plan</td></tr>
+      <tr><td><kbd>Space</kbd></td><td>Walk tab</td><td>Play or pause the rehearsal</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">On touch screens every control is at least 44 px. On narrow screens the map goes on top and the legend starts folded.</p>
+</section>
+
+<section class="step" id="routes">
+  <div class="head"><h2>Learning routes</h2></div>
+  <p>Short exercises that show what the planner can tell you. Start from a fresh page with the 13 saved stations.</p>
+  <div class="routes">
+    <div class="route"><span class="time">5 MIN</span><h3>Your first walk</h3><ol>
+      <li>Terrain: turn on Slope and Sand detected.</li>
+      <li>Plan: keep the defaults, set EVA length 120, press Plan the walk.</li>
+      <li>Walk: press Play, pause halfway, press Show the safety lines.</li></ol>
+      <p class="see">You see: 8 of 13 stations, 111 min, and the red 30 min line around the walker.</p></div>
+    <div class="route"><span class="time">3 MIN</span><h3>Time is the limit</h3><ol>
+      <li>Plan with EVA length 120, then 60 minutes.</li>
+      <li>Compare the visiting order and the stations left out.</li></ol>
+      <p class="see">You see: with 60 min the highest-value ridges are kept. Energy is never the limit here.</p></div>
+    <div class="route"><span class="time">3 MIN</span><h3>The slope limit</h3><ol>
+      <li>Terrain: move the limit from 30° to 20°.</li>
+      <li>Plan again.</li></ol>
+      <p class="see">You see: about 30 % of the area blocked and a different route.</p></div>
+    <div class="route"><span class="time">2 MIN</span><h3>When nothing fits</h3><ol>
+      <li>Plan: Energy budget 60 Wh, Plan again.</li>
+      <li>Read why, then set 63 Wh and plan.</li></ol>
+      <p class="see">You see: the reason and the budget that fits; with 63 Wh only C1 is visited.</p></div>
+    <div class="route"><span class="time">2 MIN</span><h3>Fixed radius against the terrain</h3><ol>
+      <li>Walk: Show the safety lines, tick Compare with a fixed-distance rule.</li>
+      <li>Look at the cells inside the circle but outside the red line.</li></ol>
+      <p class="see">You see: about a third of what the circle calls safe cannot get back in 30 min.</p></div>
+    <div class="route"><span class="time">2 MIN</span><h3>Any point, any energy</h3><ol>
+      <li>Walk: Try another point, place the astronaut far from the habitat.</li>
+      <li>Lower the energy still in the suit.</li></ol>
+      <p class="see">You see: the dark shade grow as the energy falls.</p></div>
+    <div class="route"><span class="time">2 MIN</span><h3>Radio and light</h3><ol>
+      <li>Plan: Show on the map, on the Radio line.</li>
+      <li>Read Best time to leave.</li></ol>
+      <p class="see">You see: the magenta stretches with no direct radio, and the departure window in sunlight.</p></div>
+    <div class="route"><span class="time">3 MIN</span><h3>Science values</h3><ol>
+      <li>Stations → Advanced: raise Hollow between ridges to 6.</li>
+      <li>Plan with EVA length 60.</li></ol>
+      <p class="see">You see: which stations change when the value of a type changes.</p></div>
+  </div>
+</section>
+
+<section class="step" id="numbers">
+  <div class="head"><h2>What the numbers mean, and what they do not</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Number</th><th>It is</th><th>It is not</th></tr></thead>
+    <tbody>
+      <tr><td>Energy (Wh)</td><td>Metabolic energy from a walking model (Santee 2001, Mars gravity in the slope term, Apollo walking speed)</td><td>A measurement of a suited astronaut on Mars; the model is an extrapolation</td></tr>
+      <tr><td>Oxygen (L)</td><td>Estimated from the energy (20.1 kJ per litre)</td><td>A tank reading</td></tr>
+      <tr><td>"Can get back from every point"</td><td>Exact on the model and its data</td><td>A guarantee against a consumption higher than the model; the tablet's adaptive meter covers that</td></tr>
+      <tr><td>30 min line</td><td>Fastest walk home in 30 min of emergency oxygen</td><td>An energy limit: time and energy are separate checks</td></tr>
+      <tr><td>Sand, boulders</td><td>What the orbital photo shows at 25 cm</td><td>Every patch: the sand map misses most sand, boulders under 1 m are invisible</td></tr>
+      <tr><td>Radio</td><td>Straight line of sight on the 1 m terrain model</td><td>A link budget; real radios get some signal past a crest</td></tr>
+      <tr><td>Station values</td><td>An expert ranking from the literature</td><td>Measurements of scientific return</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">The walk is simulated: there is no GPS on Mars. A real suit would locate itself with habitat and rover beacons and motion sensors.</p>
+</section>
+
+<section class="step" id="trouble">
+  <div class="head"><h2>When something looks wrong</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>You see</th><th>Why</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr><td>The first plan takes a while</td><td>The terrain graph (4 million cells) is built once</td><td>Wait 10–30 s; later plans are fast</td></tr>
+      <tr><td><span class="pill warn">OUT OF DATE</span> under the plan</td><td>Limits, stations or habitat changed after planning</td><td>Press Plan again</td></tr>
+      <tr><td><span class="pill warn">Not updated</span> with a message</td><td>The new plan failed; the previous one is kept</td><td>Read the message: it says what is short and what would fit</td></tr>
+      <tr><td>"Energy budget must be between 50 and 2800 Wh."</td><td>A limit is out of range</td><td>Fix the field shown in red</td></tr>
+      <tr><td>A panel says data are missing</td><td>An optional data release is not on this machine</td><td>Run <code>python -m api.check_data</code> for the download command</td></tr>
+      <tr><td>Stations or values are not the usual ones</td><td>Someone saved a test list</td><td><code>gh release download stations-v1 -D data/stations --clobber</code></td></tr>
+      <tr><td>A click on the map does nothing</td><td>No placing mode is on</td><td>Turn on Add stations, Set on the map or Place the astronaut</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  Mars EVA Planner, NASA Space Apps 2026. Screenshots from the running planner (<code>docs/user_guide/capture.mjs</code>); page built with <code>docs/user_guide/build.py</code>. The Markdown version of this guide is <code>docs/user_guide_2d.md</code>. The 3D map has its own guide: <a href="../user_guide_3d/index.html">docs/user_guide_3d/index.html</a>.
+</footer>
+</main>
+</div>
+
+<script>
+// Hover or focus an item of a key to light up its control on the screenshot above it.
+document.querySelectorAll('ol.keys').forEach(list => {
+  const fig = document.querySelector(`figure.shot[data-shot="${list.dataset.shot}"]`);
+  if (!fig) return;
+  const shown = new Set((fig.dataset.shown || '').split(',').filter(Boolean));
+  const items = [...list.querySelectorAll('li[data-n]')];
+  list.setAttribute('aria-label', 'Key to the screenshot above; arrow keys move between items');
+  list.addEventListener('keydown', e => {
+    const i = items.indexOf(document.activeElement);
+    const j = {ArrowDown: i + 1, ArrowRight: i + 1, ArrowUp: i - 1, ArrowLeft: i - 1, Home: 0, End: items.length - 1}[e.key];
+    if (i < 0 || j === undefined) return;
+    e.preventDefault();
+    const k = Math.max(0, Math.min(items.length - 1, j));
+    items[i].tabIndex = -1; items[k].tabIndex = 0; items[k].focus();
+  });
+  items.forEach((li, idx) => {
+    li.tabIndex = idx === 0 ? 0 : -1;
+    const n = li.dataset.n, mark = fig.querySelector(`.mark[data-n="${n}"]`);
+    if (!shown.has(n)) li.querySelector('.n').style.opacity = '.45';
+    const on = () => { if (!mark) return; fig.classList.add('focus'); mark.classList.add('on'); li.classList.add('on'); };
+    const off = () => { fig.classList.remove('focus'); if (mark) mark.classList.remove('on'); li.classList.remove('on'); };
+    li.addEventListener('mouseenter', on); li.addEventListener('mouseleave', off);
+    li.addEventListener('focus', on); li.addEventListener('blur', off);
+  });
+});
+// Highlight the section being read in the contents.
+const links = [...document.querySelectorAll('#toc a')];
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === `#${e.target.id}`));
+}), {rootMargin: '-30% 0px -60% 0px'});
+document.querySelectorAll('section.step').forEach(s => io.observe(s));
+</script>
+</body>
+</html>

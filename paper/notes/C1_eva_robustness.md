@@ -1,0 +1,106 @@
+# C1 · Paired EVA energy-policy evaluation
+
+Owner: Sebas (`@Seredial0326`) · Issue: #120 (C1) · Status: first evaluation block; parent issue remains open · Last update: 2026-11-15
+
+## Question
+
+How do nominal, fixed conservative and adaptive energy-return policies trade reserve failures against completed science when the actual metabolic cost differs from the planned cost? Does serially correlated consumption expose a limitation of the independent-observation filter?
+
+## Data
+
+The input is the local saved E5 plan, `data/plans/last_plan.json`, not an invented Gale tour. `src/fisica/eva_robustness.py --saved-plan` exports an explicit event sequence and exact minimum-energy E4 return paths from the current E3 × E1 sand graph. The exporter checks the saved cumulative walking/service energy and each saved return cost against that graph within 0.02 Wh. It rejects a changed graph, missing stop metadata, nonzero waiting without a power model, and non-closed tours.
+
+The saved input used a 400 Wh capacity, a 40 Wh reserve, and five serviced stations worth 25 points. Its predicted energy is 344.3204 Wh. There are 53 events, with walking checkpoints approximately every 30 m (up to one additional grid edge) and separate station-service events. Source for these numbers: `src/fisica/eva_robustness.py` → `data/robustness/c1-real/input.json` and `summary.json`. Provenance contains the original request, source SHA-256 and checksums of the DEM, slope, grid, CRS, E1 weights and E1 feature rasters actually used. The input is shared outside git, like the other scientific outputs.
+
+The experiment also supports an explicitly synthetic two-station fixture for tests. Synthetic results are never labelled as terrain measurements. No astronaut consumption observations exist in this block.
+
+## Method
+
+The implementation is a new offline evaluator in `src/fisica/eva_robustness.py`; it reuses `fisica.adaptive_k` from #101 without modifying the filter, API, HUD or operational return planner.
+
+- Policies: nominal uses k = 1; conservative fixes k at the prior's p90; adaptive uses the current posterior p90. Each checks the entire next walking/service event plus its predicted return before committing. No science is credited for service skipped or interrupted by depletion.
+- Actual energy: predicted event energy × k_true × exp(ε). k_true is the **median** multiplier, not the lognormal arithmetic mean. The log-noise marginal standard deviation is 0.15; the filter still assumes independent observations with its original standard deviation. The return follows actual directed E4 minimum-energy edges, grouped at the same walking scale, with the same metabolic uncertainty assumption.
+- Pairing: an independent random world is generated for each EVA before any policy executes. All policies see identical outbound costs and the same realised return at equal checkpoints. Alternative abort checkpoints have distinct pre-generated counterfactual return branches. A return continues the latest outbound AR(1) noise state. Policy order and early stopping cannot change random draws for another policy. Policies only update the filter from their own completed prefix.
+- Sensitivity: k_true ∈ {0.8, 1.0, 1.2, 1.5}, with log-noise correlation rho ∈ {0, 0.7}. These are declared stress scenarios, not measured astronaut parameters. Each scenario uses 300 independent EVA worlds with seed 120. At that sample size the approximate worst-case binomial 95% half-width is 5.7 percentage points; small residual rates remain imprecise. Source: `src/fisica/eva_robustness.py` → each grid scenario's `summary.json.settings`.
+- Failure definitions: a **reserve violation** occurs when realised used energy plus a realised immediate return exceeds usable capacity at an executed checkpoint, or on the selected finish. **Capacity exceeded** is a separate metric. Negative arrival margins are counterfactual energy requirements; they do not assert physical arrival after depletion. The evaluator stops crediting observations/science after depletion during an event.
+- Inference: marginal event rates use Wilson 95% intervals, including zero failures. Continuous mean metrics and policy differences use 1,000 percentile-bootstrap resamples of whole EVA worlds. Policy differences preserve pairing. There is no pixel/vertex bootstrap and no claim that zero observed failures proves safety. Paired intervals can be degenerate when there are no discordant outcomes.
+- Calibration: coverage of the filter's 90% credible interval is evaluated at each policy's final observed checkpoint, not from unobserved future samples. This is stopped-prefix coverage for the simulated fixed k, not an unconditional guarantee.
+
+## Results
+
+All numbers below come from `src/fisica/eva_robustness.py` → `data/robustness/c1-real/summary.json`, `table.md` and `walks.jsonl` (selected scenario), and `data/robustness/c1-grid/*/summary.json` (sensitivity). Figure: [c1_fig1_eva_policies.png](../figures/c1_fig1_eva_policies.png), generated by the same script.
+
+At k_true = 1.2 and rho = 0:
+
+| Policy | Reserve violations | Mean science points | Mean margin against usable capacity |
+|---|---:|---:|---:|
+| Nominal | 60.67% | 18.200 | −2.519 Wh |
+| Conservative | 0.00% | 12.400 | 46.854 Wh |
+| Adaptive | 3.67% | 15.217 | 22.400 Wh |
+
+The adaptive reserve-violation rate has a Wilson 95% interval of 2.06–6.45%. Its paired difference against nominal is −57.0 percentage points (95% bootstrap interval −62.33 to −51.0). **No policy exceeded the full capacity in this selected scenario.** The improvement concerns protecting the reserve, with lower completed science; it must not be described as that percentage of astronauts otherwise running out of oxygen.
+
+Sensitivity (same source script, outputs under `data/robustness/c1-grid/`):
+
+| k_true | rho | Nominal reserve violations | Conservative | Adaptive | Adaptive stopped-prefix IC90 coverage |
+|---|---|---:|---:|---:|---:|
+| 0.8 | 0 | 0.00% | 0.00% | 0.00% | 87.67% |
+| 0.8 | 0.7 | 0.00% | 0.00% | 0.00% | 51.33% |
+| 1.0 | 0 | 13.33% | 0.00% | 4.33% | 86.00% |
+| 1.0 | 0.7 | 16.00% | 0.00% | 6.33% | 47.00% |
+| 1.2 | 0 | 60.67% | 0.00% | 3.67% | 86.33% |
+| 1.2 | 0.7 | 69.33% | 0.00% | 11.00% | 50.67% |
+| 1.5 | 0 | 98.33% | 29.00% | 4.67% | 87.67% |
+| 1.5 | 0.7 | 98.00% | 32.33% | 12.33% | 53.67% |
+
+The correlated-noise stress test is a negative calibration result: the existing iid filter becomes overconfident. A posterior p90 is not a calibrated frequentist 90% return guarantee under this misspecification. A fixed prior-p90 policy is also not uniformly safe when the true bias is larger. No production filter changes are justified by this single-tour evaluation alone.
+
+## Checks
+
+`tests/fisica/test_eva_robustness.py` checks policy-order invariance, reproducibility, shared returns at equal checkpoints, pre-departure checks, service accounting, no information from unwalked events, no science after physical depletion, nondegenerate zero-failure intervals, input validation and an exact directed-graph export with deliberate profile corruption. Existing adaptive-filter and E3 tests run with it.
+
+The scientific Python environment is a Python 3.12 environment with `api/requirements.txt` installed (`make demo` creates one); a plain Python install lacks the dependencies. No dependencies were installed for this block. Every summary identifies Python/NumPy, input hash, script/filter SHA-256 and source commit. Script hashes identify the executed implementation even when it has not yet been committed.
+
+**Clean-checkout correction:** the directed-graph exporter test originally mocked the graph but still hashed the real `data/base/` metadata. Its success on a populated workspace did not establish independence from scientific data. It now hashes temporary synthetic metadata alongside its synthetic graph, without skipping the test. Validation includes running this test module from an isolated copy of the physics/graph sources and the test, with no `data/` directory. This changes test isolation only; the production exporter still hashes the real input files and the experiment results are unchanged.
+
+## Limitations and remaining C1 work
+
+- Simulation only, with one E5 tour and one habitat; no human, suit, physiological-sensor or out-of-site validation. Noise and bias are assumed.
+- Energy-only offline comparison. It does not validate a joint energy/time/O2-feasible return, speed changes or suit leaks; that depends on #119. Metabolic O2 would be a rescaling of the same energy, not a new independent constraint.
+- Decisions and reserve checks are at checkpoints, not at every metre or during a continuous service interval. The exporter rejects nonzero waiting until a power model is explicit. Return paths and topology are fixed, not replanned against a changing DEM or hazard map.
+- The input's 120-minute request is provenance, not a separately enforced stochastic time constraint. The science score and station subset are fixed by the saved E5 plan; the evaluator can turn back, not optimise a new tour.
+- The lognormal perturbation describes realised segment use, not a separately modelled measurement sensor. The iid filter does not account for serial correlation. Return counterfactuals share samples at equal checkpoints but do not use a globally coherent random terrain field across different abort points.
+- Future work: more habitats/budgets/tours, explicit time-feasible return contracts from #119, fatigue/sensor-error scenarios, and integration of a result registry with C3/#16 after Juan's handoff. No existing paper results or nominal routing costs are replaced.
+
+## What other pieces can use
+
+- **JB (#101):** the stopped-prefix calibration failure under correlated noise is a stress-test limitation to consider before changing quantiles or the filter.
+- **Aaron/Diana (#119):** the event input can consume validated return profiles from additional plans. The evaluator does not certify operational safety.
+- **Juan (#16/C3):** `summary.json`, `table.md` and `walks.jsonl` provide settings, provenance, denominators, marginal intervals and paired differences. E1/E8/E9 results remain untouched.
+- **Sebas (HUD):** keep “reserve violation” separate from “capacity exceeded”; do not present simulated rates as live telemetry.
+
+## Reproduce
+
+From the repository root, in the existing scientific environment:
+
+```powershell
+python -m pytest tests/fisica -q
+python src/fisica/eva_robustness.py --synthetic --out data/robustness/c1-synthetic
+python src/fisica/eva_robustness.py --saved-plan data/plans/last_plan.json --runs 300 --bootstrap 1000 --out data/robustness/c1-real --figure paper/figures/c1_fig1_eva_policies.png
+foreach ($bias in @(0.8, 1.0, 1.2, 1.5)) {
+  foreach ($correlation in @(0.0, 0.7)) {
+    python src/fisica/eva_robustness.py --plan data/robustness/c1-real/input.json --k-true $bias --rho $correlation --runs 300 --bootstrap 1000 --out ("data/robustness/c1-grid/k" + $bias + "-rho" + $correlation)
+  }
+}
+```
+
+Export requires the saved E5 tour, base grid and any E1 feature rasters used by that tour. Subsequent evaluation from the explicit exported `input.json` requires only NumPy/SciPy and the evaluator/filter. A different saved last plan is a different experiment; use the shared exported input and its checksum to reproduce these results.
+
+## Outputs
+
+- `data/robustness/c1-real/{input.json,summary.json,walks.jsonl,table.md}`.
+- `data/robustness/c1-grid/k*-rho*/{input.json,summary.json,walks.jsonl,table.md}`.
+- `data/robustness/c1-synthetic/` (provisional fixture only).
+- `paper/figures/c1_fig1_eva_policies.png`.
+
+Raw inputs and outputs stay outside git. #120 remains open for the remaining C1 scope and C2–C5 coordination.

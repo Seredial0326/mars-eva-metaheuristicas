@@ -1,0 +1,29 @@
+{
+  "profile": "gdal2tiles raster profile, --xyz, PNG 256 x 256, y = 0 at the top",
+  "origin_m": {
+    "xmin": 8142537.492786024,
+    "ymax": -283463.075189438
+  },
+  "tile_z0_m": 2048.0,
+  "tile_bounds": "tile (z, x, y) spans x in [xmin + x*s, xmin + (x+1)*s], y in [ymax - (y+1)*s, ymax - y*s], with s = tile_z0_m / 2**z",
+  "layers": {
+    "ortho": {
+      "url": "tiles/ortho/{z}/{x}/{y}.png",
+      "zoom": "0-5",
+      "max_res_m": 0.25
+    },
+    "slope": {
+      "url": "tiles/slope/{z}/{x}/{y}.png",
+      "zoom": "0-3",
+      "max_res_m": 1.0
+    },
+    "hillshade": {
+      "url": "tiles/hillshade/{z}/{x}/{y}.png",
+      "zoom": "0-3",
+      "max_res_m": 1.0
+    }
+  },
+  "slope_colors": "green 0, yellow 15, orange 30, red 45+ degrees",
+  "bbox_size_m": 2000.0,
+  "note": "Tiles span 2048 m; the last 48 m on the right and bottom are transparent."
+}

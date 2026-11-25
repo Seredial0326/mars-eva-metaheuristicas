@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>The demo · Mars EVA Planner</title>
+<meta name="description" content="The Mars EVA Planner demo in ten steps: what to press and what to look for, with real screenshots.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Mars EVA Planner</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-demo" href="/docs/user_guide/">User guide</a>
+      <a class="nav-demo" href="demo.html" aria-current="page">Watch the demo</a>
+      <a class="btn btn-primary btn-sm" href="/?tab=terrain">Try it</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-head" aria-labelledby="page-title">
+    <div class="wrap">
+      <p class="eyebrow">Watch the demo</p>
+      <h1 id="page-title">The demo, step by step</h1>
+      <p class="lede">Ten steps through the planner, about seven minutes. Each step says what to press and what to look for.</p>
+    </div>
+  </section>
+
+  <section class="band-dark video" id="video" aria-labelledby="video-title">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="section__title">
+          <h2 id="video-title">The demo, on video</h2>
+        </div>
+        <div class="text">
+          <p>A recorded walkthrough of the demo, for anyone who cannot run the app.</p>
+        </div>
+      </div>
+      <div class="video__frame">
+        <iframe src="https://www.youtube-nocookie.com/embed/7LSQqSFdU6c?rel=0" title="Mars EVA Planner: the 30-second demo (YouTube)"
+                loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+      </div>
+      <!-- The video is on YouTube; the button also works where the embed cannot load (offline). -->
+      <p class="video__alt"><a class="btn btn-primary" data-youtube-link href="https://www.youtube.com/watch?v=7LSQqSFdU6c">Watch on YouTube</a></p>
+    </div>
+  </section>
+
+  <div class="wrap steps-layout">
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Steps</h2>
+      <ol>
+        <li><a href="#step-1"><span class="n">1</span> Terrain</a></li>
+        <li><a href="#step-2"><span class="n">2</span> What a step costs</a></li>
+        <li><a href="#step-3"><span class="n">3</span> Steep cells</a></li>
+        <li><a href="#step-4"><span class="n">4</span> Science stations</a></li>
+        <li><a href="#step-5"><span class="n">5</span> Plan</a></li>
+        <li><a href="#step-6"><span class="n">6</span> Walkback</a></li>
+        <li><a href="#step-7"><span class="n">7</span> Radio</a></li>
+        <li><a href="#step-8"><span class="n">8</span> Solar storm</a></li>
+        <li><a href="#step-9"><span class="n">9</span> Weather on the day</a></li>
+        <li><a href="#step-10"><span class="n">10</span> 3D rehearsal</a></li>
+        <li><a href="#tablet"><span class="n" aria-hidden="true">+</span> Guide (tablet)</a></li>
+      </ol>
+    </nav>
+
+    <div class="steps">
+      <section class="before" aria-labelledby="before-title">
+        <h2 id="before-title">Before you start</h2>
+        <p>Start the server and open the planner at <a href="/"><code>localhost:8000</code></a>. Press <strong>Plan the walk</strong> once before presenting, so the next plans are quick.</p>
+      </section>
+
+      <article class="step" id="step-1" aria-labelledby="step-1-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">1</span>
+          <h2 id="step-1-title"><span class="visually-hidden">Step 1: </span>Terrain</h2>
+          <span class="step__time">30 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>In <strong>1 Terrain</strong>, switch on <strong>Sand detected</strong> and <strong>Boulders</strong> over the <strong>Slope</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>The 1 m elevation model misses the 1–3 m boxwork ridges; the 25 cm photo shows them. Boulders are context, not part of the route cost.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-terrain-1000.webp"
+               srcset="assets/step-terrain-640.webp 640w, assets/step-terrain-1000.webp 1000w, assets/step-terrain-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The Terrain tab: slope colours over the orbital photo, with white sand patches and boulder dots switched on.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-2" aria-labelledby="step-2-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">2</span>
+          <h2 id="step-2-title"><span class="visually-hidden">Step 2: </span>What a step costs</h2>
+          <span class="step__time">45 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Still in <strong>1 Terrain</strong>, turn on <strong>Walking cost</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>Each metre costs energy from a walking model with Mars gravity. Sand adds up to 11.5 %, the one terrain price learned from Curiosity's route that held up.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-cost-1000.webp"
+               srcset="assets/step-cost-640.webp 640w, assets/step-cost-1000.webp 1000w, assets/step-cost-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The walking-cost layer: purple where a metre is cheap, orange to yellow where it is costly.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-3" aria-labelledby="step-3-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">3</span>
+          <h2 id="step-3-title"><span class="visually-hidden">Step 3: </span>Steep cells</h2>
+          <span class="step__time">20 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Move <strong>Never cross cells steeper than</strong> from 30° to 20°.</dd>
+          <dt>Look for</dt>
+          <dd>At 20°, 29.6 % of the box is off limits. This limit changes the routes more than any other setting.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-steep-1000.webp"
+               srcset="assets/step-steep-640.webp 640w, assets/step-steep-1000.webp 1000w, assets/step-steep-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The steep-cell limit set to 20 degrees; the sidebar reads 29.6 % of the area is off limits.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-4" aria-labelledby="step-4-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">4</span>
+          <h2 id="step-4-title"><span class="visually-hidden">Step 4: </span>Science stations</h2>
+          <span class="step__time">45 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Open <strong>2 Stations</strong>, then <strong>Advanced: science values and AI-found sites</strong>. The values by type can be edited: ridge 5, hollow 4, contact 4, Curiosity site 3.</dd>
+          <dt>Look for</dt>
+          <dd>In the same section, <strong>Load AI-found sites</strong> adds 15 stations found next to the sand patches, without saving them.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-stations-1000.webp"
+               srcset="assets/step-stations-640.webp 640w, assets/step-stations-1000.webp 1000w, assets/step-stations-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The Stations tab: science value by type and the list of the 13 stations, with their markers on the map.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-5" aria-labelledby="step-5-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">5</span>
+          <h2 id="step-5-title"><span class="visually-hidden">Step 5: </span>Plan</h2>
+          <span class="step__time">1 min</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>In <strong>3 Plan</strong>, keep 120 min and 1,000 Wh and press <strong>Plan the walk</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>The planner visits 8 of the 13 stations, with a way back from every point. With 60 min it keeps only the 3 best ridges.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/plan-2d-1400.webp"
+               srcset="assets/plan-2d-800.webp 800w, assets/plan-2d-1400.webp 1400w, assets/plan-2d-2000.webp 2000w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1400" height="875" loading="lazy" decoding="async"
+               alt="The Plan tab: 8 of 13 stations visited in 111 of 120 minutes, the visiting order, and the route on the map.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-6" aria-labelledby="step-6-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">6</span>
+          <h2 id="step-6-title"><span class="visually-hidden">Step 6: </span>Walkback</h2>
+          <span class="step__time">45 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Press <strong>Rehearse</strong>. In <strong>4 Walk</strong>, pause anywhere with Space.</dd>
+          <dt>Look for</dt>
+          <dd>The red line is the 30 min return and the dark shade is out of reach with the energy left. The dashed circles are the fixed 1.35 km and Apollo 1.7 km rules.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/walkback-2d-1400.webp"
+               srcset="assets/walkback-2d-800.webp 800w, assets/walkback-2d-1400.webp 1400w, assets/walkback-2d-2000.webp 2000w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1400" height="875" loading="lazy" decoding="async"
+               alt="The Walk tab over the whole box: the red 30-minute line follows the terrain, a dark shade marks what cannot be reached, and dashed arcs show the fixed circles.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-7" aria-labelledby="step-7-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">7</span>
+          <h2 id="step-7-title"><span class="visually-hidden">Step 7: </span>Radio</h2>
+          <span class="step__time">20 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Back in <strong>3 Plan</strong>, press <strong>Show on the map</strong> on the <strong>Radio</strong> line under the plan.</dd>
+          <dt>Look for</dt>
+          <dd>The habitat antenna sees 22.6 % of the box, in blue. Magenta marks the 41 % of the 120 min tour with no direct radio.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-radio-1000.webp"
+               srcset="assets/step-radio-640.webp 640w, assets/step-radio-1000.webp 1000w, assets/step-radio-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="Radio coverage in blue around the habitat, with the stretches of the route that have no direct radio drawn in magenta.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-8" aria-labelledby="step-8-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">8</span>
+          <h2 id="step-8-title"><span class="visually-hidden">Step 8: </span>Solar storm</h2>
+          <span class="step__time">30 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>In <strong>Context → Radiation</strong>, pick a storm and press <strong>Simulate a solar storm</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>The fastest way home appears as an amber dashed line, with the dose on the way back. <strong>Dismiss</strong> clears it.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-storm-1000.webp"
+               srcset="assets/step-storm-640.webp 640w, assets/step-storm-1000.webp 1000w, assets/step-storm-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="A solar storm alert: a banner at the top of the map says to return now, and an amber dashed line shows the fastest way home.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-9" aria-labelledby="step-9-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">9</span>
+          <h2 id="step-9-title"><span class="visually-hidden">Step 9: </span>Weather on the day</h2>
+          <span class="step__time">20 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Open <strong>Context → Weather on the day</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>On sol 4711 the air went from −74 to −4 °C, with 11.9 h of daylight, so a 120 min walk fits.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-weather-1000.webp"
+               srcset="assets/step-weather-640.webp 640w, assets/step-weather-1000.webp 1000w, assets/step-weather-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The Context tab with Weather on the day open for sol 4711: air from −74 to −4 °C, daylight from 05:24 to 17:20, and a chart of the daily temperatures over the boxwork campaign.">
+        </figure>
+      </article>
+
+      <article class="step" id="step-10" aria-labelledby="step-10-title">
+        <div class="step__head">
+          <span class="step__n" aria-hidden="true">10</span>
+          <h2 id="step-10-title"><span class="visually-hidden">Step 10: </span>3D rehearsal</h2>
+          <span class="step__time">40 s</span>
+        </div>
+        <dl class="step__body">
+          <dt>Press</dt>
+          <dd>Press <strong>3D</strong>, then <strong>Rehearse</strong>.</dd>
+          <dt>Look for</dt>
+          <dd>The same walk at eye height, under the Sun of sol 4711, with the same guide as the tablet.</dd>
+        </dl>
+        <figure class="shot">
+          <img src="assets/step-rehearse-1000.webp"
+               srcset="assets/step-rehearse-640.webp 640w, assets/step-rehearse-1000.webp 1000w, assets/step-rehearse-1600.webp 1600w"
+               sizes="(min-width: 1264px) 880px, (min-width: 1024px) 66vw, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+               width="1000" height="625" loading="lazy" decoding="async"
+               alt="The 3D rehearsal at eye height: the blue route crosses the terrain toward the next stations, a station card shows the station's science value, tasks and arrival time, and the player panel shows the meters.">
+        </figure>
+      </article>
+
+      <section class="step" id="tablet" aria-labelledby="tablet-title">
+        <div class="step__head">
+          <h2 id="tablet-title">Guide (tablet)</h2>
+        </div>
+        <div class="guide-box">
+          <dl class="step__body">
+            <dt>Press</dt>
+            <dd>In <strong>4 Walk</strong>, press <strong>Tablet</strong>, then <strong>Walk</strong>.</dd>
+            <dt>Try</dt>
+            <dd>Under <strong>Demo controls (for the presenter)</strong>, press <strong>Off route</strong> and <strong>Solar storm</strong>: the storm turns the walk home on a red line, with the dose under <strong>Why and how much</strong>. <strong>Return home</strong> turns back at any time.</dd>
+          </dl>
+          <img src="assets/guide-storm-800.webp"
+               srcset="assets/guide-storm-480.webp 480w, assets/guide-storm-800.webp 800w, assets/guide-storm-1184.webp 1184w"
+               sizes="(min-width: 720px) 288px, 70vw"
+               width="800" height="1595" loading="lazy" decoding="async"
+               alt="Guide mode on a tablet during a simulated solar storm: a red banner says to return home now, the next turn says home in 6 min, and the map shows the way home in red.">
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Mars EVA Planner · Photos: NASA/JPL-Caltech · Orbital data: HiRISE (NASA/JPL-Caltech/University of Arizona), USGS Astrogeology</span>
+    <span>NASA Space Apps Challenge 2026</span>
+  </div>
+</footer>
+</body>
+</html>

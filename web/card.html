@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EVA Wrist Card</title>
+<script src="/vendor/qrcode-generator-1.4.4.min.js"></script>
+<style>
+  /* Printable cuff checklist, like the ones Apollo crews wore on the wrist (#166): the
+     rules on top, then 3 facts per stop, at least 12 pt, about 100 mm wide, every warning
+     marked with "!" as well as colour. Everything else is under Details: open on screen,
+     printed on a second page for the support team. Print or "Save as PDF" from the browser. */
+  :root { --ink: #111; --muted: #444; --line: #999; --warn: #9a3412; --paper: #fff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #e9e9e6; color: var(--ink);
+               font: 16px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .bar { max-width: 760px; margin: 12px auto; padding: 0 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .bar button { font: inherit; font-weight: 600; padding: 10px 16px; min-height: 44px; border-radius: 8px;
+                border: 1px solid #888; background: #fff; cursor: pointer; }
+  .card { width: 100mm; max-width: calc(100vw - 24px); margin: 0 auto 16px; background: var(--paper);
+          padding: 4mm 4.5mm; border: 1.5px solid var(--ink); border-radius: 6px; }
+  h1 { font-size: 17px; margin: 0; letter-spacing: 0.02em; }
+  .sub { color: var(--muted); font-size: 13px; margin: 2px 0 8px; }
+  .rules { border: 2px solid var(--ink); border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; }
+  .rules h2 { font-size: 16px; margin: 0 0 4px; }
+  .rules ul { margin: 0; padding-left: 1.1em; }
+  .rules li { margin: 3px 0; }
+  .stops { list-style: none; margin: 0; padding: 0; font-variant-numeric: tabular-nums; }
+  .stop { border-top: 1.5px solid var(--ink); padding: 5px 0 6px; break-inside: avoid; }
+  .stop .name { font-weight: 700; display: flex; gap: 6px; align-items: baseline; }
+  .stop .name .n { min-width: 1.6em; }
+  .stop .name small { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 8px; margin-top: 2px; }
+  .facts span { font-size: 12px; color: var(--muted); display: block; }
+  .facts b { font-size: 18px; }
+  .leg { font-size: 13px; color: var(--muted); padding: 0 0 4px 2.2em; }
+  .photo { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .warn { color: var(--warn); font-weight: 700; }
+  .mark { display: inline-block; min-width: 0.9em; font-weight: 800; color: var(--warn); }
+  .qr-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  #qr svg { width: 26mm; height: 26mm; display: block; }
+  #qr-note { font-size: 12px; color: var(--muted); }
+  .details { max-width: 760px; margin: 0 auto 24px; background: var(--paper); padding: 12px 16px;
+             border: 1px solid var(--line); border-radius: 6px; font-size: 14px; }
+  .details summary { font-weight: 700; cursor: pointer; min-height: 32px; }
+  .details table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .details th, .details td { padding: 4px 5px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+  .details th { font-size: 12px; color: var(--muted); font-weight: 600; border-bottom: 2px solid var(--ink); }
+  .details th:nth-child(2), .details td:nth-child(2) { text-align: left; }
+  .details tr.leg td { border-bottom: 0; color: var(--muted); font-size: 12px; padding-top: 0; }
+  .totals { display: grid; grid-template-columns: repeat(4, auto); gap: 2px 14px; margin: 6px 0; }
+  .totals b { font-size: 16px; display: block; }
+  .details ul { padding-left: 1.2em; }
+  .foot { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  @media (max-width: 560px) { .totals { grid-template-columns: repeat(2, auto); } .details th, .details td { padding: 3px; } }
+  @media print {
+    html, body { background: #fff; font-size: 12pt; }
+    .bar, .screen-only { display: none !important; }
+    .card { margin: 0; max-width: none; border-radius: 0; }
+    .facts span, .leg, .photo, .sub, #qr-note { font-size: 12pt; }
+    .details { break-before: page; border: 0; max-width: none; padding: 0; font-size: 12pt; }
+    .details th, .details tr.leg td { font-size: 11pt; }
+    @page { size: A4; margin: 10mm; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button id="print">Print / Save as PDF</button>
+  <button onclick="location.href='/'">Back to the planner</button>
+</div>
+<div class="card" id="card"><h1>EVA wrist card</h1><div class="sub" id="status" role="status">Loading the last plan…</div></div>
+<details class="details" id="details" open hidden></details>
+
+<script type="module">
+// ---------------------------------------------------------------------------
+// Wrist card (P6, #45; layout #166): the plan saved by the HUD (GET /plan/last) as a
+// printable cuff checklist. Same numbers, words and thresholds as the guide (guide_core,
+// terms.js): the turn-back rules on top, then per stop when you arrive, how long home
+// takes from there and the spare energy, with "!" where the guide would say LOW or TURN
+// BACK. Everything the card showed before is under Details: energy and O₂ used, the time
+// and energy to get back, legs and radio gaps, the storm dose, the planner settings.
+// The QR opens guide mode on the arm tablet (same server).
+// ---------------------------------------------------------------------------
+import "/terms.js";
+import * as G from "/guide_core.js";
+
+const T = globalThis.TERMS, N = T.NAMES;
+const ui = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const mark = state => state && state !== "ok" ? `<span class="mark" aria-label="${T.word(state)}">!</span>` : "";
+
+async function json(url, opts) {
+  try {
+    const r = await fetch(url, opts);
+    return r.ok ? {ok: true, body: await r.json()} : {ok: false, status: r.status};
+  } catch { return {ok: false, status: 0}; }
+}
+
+async function photoModel() {
+  try {                                     // no photo catalogue: the card simply has no photo lines
+    const P = await import("/hud_photos.js"), cat = await P.loadCatalog();
+    return cat.ok ? {P, model: cat.model} : null;
+  } catch { return null; }
+}
+
+async function main() {
+  const last = await json("/plan/last");
+  if (!last.ok) {
+    ui("status").textContent = last.status === 404
+      ? "No plan yet. Plan an EVA in the planner first, then open this card again."
+      : "The planner is not answering. Check that it is running, then reload this page.";
+    return;
+  }
+  const saved = last.body;
+  const [rubricRes, radRes, photos] = await Promise.all([json("/stations/rubric"), json("/radiation"), photoModel()]);
+  const rubric = rubricRes.ok ? rubricRes.body : null, rad = radRes.ok ? radRes.body : null;
+  const route = G.routeFromPlan(saved);
+  const habitat = saved.plan.properties.habitat;
+  await G.attachComms(route, habitat);
+  const f = saved.plan.features.find(x => x.properties.kind === "route"), p = f.properties;
+  const req = saved.request || {}, n = route.coords.length - 1, limitS = G.evaLimitS(saved);
+  const stationOf = id => saved.plan.features.find(x => x.properties.kind === "station" && x.properties.id === id);
+  const label = type => (rubric && rubric[type] && rubric[type].label) || type || "";
+
+  // Steps: start, each stop (tour) or the goal (single round trip), habitat.
+  const stops = route.stops && route.stops.length ? route.stops.map(s => ({i: s.i, id: s.name}))
+    : route.turnIndex != null ? [{i: route.turnIndex, id: (route.goalName || "").replace("Arrive at station ", "")}] : [];
+  const steps = [{i: 0, id: "Habitat", what: "depart"}, ...stops.map(s => ({...s, what: "station"})),
+                 {i: n, id: "Habitat", what: "arrive"}];
+  const o2 = p.o2_used_l || null;
+  const silentOn = (a, b) => {
+    if (!route.radio) return null;
+    let m = 0;
+    for (let k = a + 1; k <= b; k++) if (!route.radio[k]) m += route.d[k] - route.d[k - 1];
+    return m;
+  };
+
+  // The card: 3 facts per stop. The details table: everything the card showed before.
+  let cardRows = "", detailRows = "";
+  steps.forEach((s, k) => {
+    const a = k ? steps[k - 1].i : 0, legM = k ? route.d[s.i] - route.d[a] : 0, silent = k ? silentOn(a, s.i) : null;
+    const noRadio = silent >= 10 ? silent : null;                     // under 10 m: shadow-edge flicker
+    if (k) {
+      cardRows += `<li class="leg">↓ ${legM.toFixed(0)} m` +
+        (noRadio ? ` · <span class="warn"><span class="mark">!</span>no ${N.radio.toLowerCase()} ${noRadio.toFixed(0)} m</span>` : "") + `</li>`;
+      detailRows += `<tr class="leg"><td></td><td colspan="7">↓ ${legM.toFixed(0)} m` +
+        (noRadio ? ` · no direct radio ${noRadio.toFixed(0)} m` : "") + `</td></tr>`;
+    }
+    const st = s.what === "station" ? stationOf(s.id) : null;
+    const service = st ? st.properties.service_time_min : null;
+    const num = s.what === "station" ? k : k === 0 ? "▲" : "■";
+    const name = s.what === "station"
+      ? `${esc(s.id)} <small>${esc(label(st && st.properties.type))}${service ? ` · ${service} min work` : ""}</small>`
+      : `Habitat <small>(${s.what})</small>`;
+    const m = G.meters(route, s.i, limitS);
+    let photo = "";
+    if (photos && photos.model && st) {
+      const [x, y] = st.geometry.coordinates;
+      const line = photos.P.stationPhotoLine(photos.model, {x, y});
+      if (line && line.photoId) photo = `<div class="photo">Rover photo: ${esc(line.short.replace(/^Photo /, ""))}</div>`;
+    }
+    cardRows += `<li class="stop"><div class="name"><span class="n">${num}</span><span>${name}</span></div>` +
+      `<div class="facts">` +
+      `<div><span>Arrive</span><b>${T.minutes(route.t[s.i] - route.t[0])}</b> min</div>` +
+      `<div class="${m.back.good ? "" : "warn"}"><span>${N.home}</span>${mark(m.back.state)}<b>${T.minutes(m.back.s)}</b> min</div>` +
+      `<div class="${m.energy.good ? "" : "warn"}"><span>${N.spare}</span>${mark(m.energy.state)}<b>${m.energy.leftWh.toFixed(0)}</b> Wh</div>` +
+      `</div>${photo}</li>`;
+    detailRows += `<tr><td>${num}</td><td>${name}</td>` +
+      `<td>${T.minutes(route.t[s.i] - route.t[0])}</td><td>${route.used[s.i].toFixed(0)}</td>` +
+      `<td>${o2 ? o2[s.i].toFixed(0) : "—"}</td>` +
+      `<td>${T.minutes(m.back.s)}</td>` +
+      `<td>${route.rv ? route.rv[s.i].toFixed(0) : "—"}</td>` +
+      `<td>${m.energy.leftWh.toFixed(0)}</td></tr>`;
+  });
+
+  // Farthest point in time, and the storm dose from there.
+  let far = 0;
+  if (route.rvTime) for (let k = 1; k <= n; k++) if (route.rvTime[k] > route.rvTime[far]) far = k;
+  const farS = route.rvTime ? route.rvTime[far] : null;
+  const real = rad && rad.scenarios.find(s => s.id === "real"), x50 = rad && rad.scenarios.find(s => s.id === "x50");
+  const silentTotal = route.radio ? silentOn(0, n) : null;
+  const longestSilent = route.radioEvents ? Math.max(0, ...route.radioEvents.filter(e => e.kind === "loss").map(e => e.silentS)) : null;
+
+  const now = new Date();
+  const when = `${now.getDate()} ${now.toLocaleString("en-GB", {month: "short"})} ` +
+               `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const plainLimits = [`${req.energy_budget_wh ?? "?"} Wh`, req.max_duration_min ? `${req.max_duration_min} min` : null,
+                       `${stops.length} ${stops.length === 1 ? "stop" : "stops"}`].filter(Boolean);
+  const L = T.LIMITS, lowWh = L.spareLowFrac * p.usable_wh;
+
+  ui("card").innerHTML = `
+    <h1>EVA wrist card · Gale boxwork</h1>
+    <div class="sub">Card of ${esc(when)} · ${esc(plainLimits.join(" · "))}</div>
+    <div class="rules">
+      <h2>Turn back if…</h2>
+      <ul>
+        <li><span class="mark">!</span><b>${N.home} over ${L.homeLowS / 60} min</b> (LOW). Over ${L.homeS / 60} min is TURN BACK: the emergency-oxygen line.</li>
+        <li><span class="mark">!</span><b>${N.spare} under ${T.wh(lowWh)}</b> (LOW, ${Math.round(L.spareLowFrac * 100)} % of ${T.wh(p.usable_wh)}). Under 0 is TURN BACK.</li>
+        ${limitS ? `<li><span class="mark">!</span><b>${N.evaLeft} shorter than ${N.home.toLowerCase()}</b>: you must be home by ${T.minutes(limitS)} min (TURN BACK).</li>` : ""}
+        <li><span class="mark">!</span><b>${N.storm}</b>: ${N.returnHome.toLowerCase()} now, by the fastest way.</li>
+        ${silentTotal != null && silentTotal >= 10 ? `<li><b>${N.radio}</b>: no direct ${N.radio.toLowerCase()} for ${silentTotal.toFixed(0)} m (marked ! below). Stay within sight of your partner.</li>` : ""}
+      </ul>
+    </div>
+    <ol class="stops">${cardRows}</ol>
+    <div class="qr-row"><div id="qr"></div><div id="qr-note" class="screen-only"></div></div>`;
+
+  ui("details").hidden = false;
+  ui("details").innerHTML = `
+    <summary>Details (support team)</summary>
+    <div class="totals">
+      <span>Stations<b>${stops.length}</b></span><span>Time<b>${T.min(p.time_s)}</b></span>
+      <span>Energy<b>${p.energy_wh.toFixed(0)} / ${p.usable_wh.toFixed(0)} Wh</b></span>
+      <span>Distance<b>${(p.length_m / 1000).toFixed(2)} km</b></span>
+    </div>
+    <table>
+      <tr><th>#</th><th>Stop</th><th>Arrive (min)</th><th>Used (Wh)</th><th>O₂ (L)</th>
+          <th>${N.home} (min)</th><th>Energy to get back (Wh)</th><th>${N.spare} (Wh)</th></tr>
+      ${detailRows}
+    </table>
+    <ul>
+      ${farS != null ? `<li>Farthest point: ${N.home.toLowerCase()} ${T.min(farS)}, reached ${T.min(route.t[far] - route.t[0])} into the EVA.</li>` : ""}
+      ${farS != null && real ? `<li>${N.storm} dose from the farthest point: ${(farS / 3600 * real.rate_ugy_h).toFixed(1)} µGy (real 2025-11-11 event)` +
+        (x50 ? `, ${(farS / 3600 * x50.rate_ugy_h).toFixed(0)} µGy if 50× stronger.` : ".") + `</li>` : ""}
+      ${silentTotal != null ? `<li>${N.radio}: ${silentTotal.toFixed(0)} m with no direct line of sight to the habitat` +
+        (longestSilent ? ` (longest about ${Math.max(1, Math.round(longestSilent / 60))} min)` : "") + `.</li>` : ""}
+      <li>Planner settings: energy ${req.energy_budget_wh ?? "?"} Wh, reserve ${Math.round((req.margin ?? 0) * 100)} %,
+        ${req.max_duration_min ? `${N.evaLength} ${req.max_duration_min} min, ` : ""}steepest cell ${req.max_cell_slope_deg ?? "no limit"}${req.max_cell_slope_deg != null ? "°" : ""}.</li>
+    </ul>
+    <div class="foot screen-only">Generated ${now.toISOString().slice(0, 16).replace("T", " ")} UTC from the last plan.
+      Energy and O₂ are metabolic estimates (Santee 2001 at Mars gravity; 20.1 kJ/L), radio is line of sight on the 1 m DEM.</div>`;
+
+  // QR: guide mode on this server, for the arm tablet. Quiet zone of 4 modules.
+  const url = `${location.origin}/guide.html`;
+  const qr = qrcode(0, "M"); qr.addData(url); qr.make();
+  ui("qr").innerHTML = qr.createSvgTag({cellSize: 3, margin: 12, scalable: true, alt: "QR code to open the tablet guide"});
+  const local = ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
+  ui("qr-note").innerHTML = `Scan to open the ${N.tablet.toLowerCase()} guide:<br>${esc(url)}` +
+    (local ? `<br><span class="warn">This address only works on this computer; open the card through the computer's network address so the tablet can use the QR.</span>` : "");
+  document.title = `EVA Wrist Card · ${stops.length} stations`;
+}
+
+ui("print").addEventListener("click", () => window.print());
+main().catch(err => { ui("status").textContent = `The card could not be built: ${err.message}. Reload the page to try again.`; console.error(err); });
+</script>
+</body>
+</html>

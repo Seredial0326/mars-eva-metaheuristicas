@@ -1,0 +1,54 @@
+{
+  "crs_wkt": "data/base/crs.wkt (repo: docs/contracts/crs.wkt)",
+  "crs_proj4": "+proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=3396190 +units=m +no_defs=True",
+  "bbox": {
+    "xmin": 8142537.492786024,
+    "ymin": -285463.075189438,
+    "xmax": 8144537.492786024,
+    "ymax": -283463.075189438
+  },
+  "bbox_margin_64m": {
+    "xmin": 8142473.492786024,
+    "ymin": -285527.075189438,
+    "xmax": 8144601.492786024,
+    "ymax": -283399.075189438
+  },
+  "grid_1m": {
+    "file": "data/base/dem_1m.tif",
+    "cell_size_m": 1.0,
+    "width": 2000,
+    "height": 2000,
+    "origin_x": 8142537.492786024,
+    "origin_y": -283463.075189438,
+    "affine": [
+      1.0,
+      0.0,
+      8142537.492786024,
+      0.0,
+      -1.0,
+      -283463.075189438
+    ]
+  },
+  "grid_025m": {
+    "file": "data/base/ortho_color_025.tif",
+    "cell_size_m": 0.25,
+    "width": 8000,
+    "height": 8000,
+    "affine": [
+      0.25,
+      0.0,
+      8142537.492786024,
+      0.0,
+      -0.25,
+      -283463.075189438
+    ]
+  },
+  "dtype": "float32",
+  "nodata": "NaN",
+  "notes": [
+    "Origin = top-left corner of cell (0, 0). Row 0 = north.",
+    "Center of cell (row, col): x = origin_x + (col + 0.5) * cell; y = origin_y - (row + 0.5) * cell.",
+    "To crop: gdalwarp -te xmin ymin xmax ymax -tr 1 1 (never -tap).",
+    "One 1 m cell = 4 x 4 cells of 0.25 m."
+  ]
+}

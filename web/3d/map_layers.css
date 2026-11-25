@@ -1,0 +1,18 @@
+/* Map layer section of the 3D map (map_layers.js, issue #110): the picker, the opacity
+   slider and the legend, drawn like the sidebar legends of the 2D planner (web/index.html:
+   .legend, .ticks, .swatch, .rock-key). Colours and fields follow index.html (#sun-sol). */
+#layer-pick { display: block; width: 100%; box-sizing: border-box; padding: 3px 6px; border: 1px solid var(--border);
+              border-radius: 6px; background: #1c222b; color: var(--text); font: inherit; }
+#layer-opacity-label { display: block; margin-top: 8px; }
+#layer-opacity { display: block; width: 100%; margin: 4px 0 0; accent-color: var(--accent); }
+#layer-opacity:disabled { opacity: 0.6; }
+.layer-bar { height: 10px; border-radius: 3px; margin: 8px 0 2px; }
+.layer-ticks { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 12px; }
+.layer-caption { margin-top: 4px; }
+.layer-key { margin-top: 8px; }
+.layer-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px;
+                vertical-align: -1px; }
+.layer-dots { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; }
+.layer-dots i { flex: none; border-radius: 50%; }
+#layer-note { margin-top: 6px; }
+#layer-legend:empty, #layer-note:empty { display: none; }

@@ -1,0 +1,19 @@
+{
+  "_nota": "Lista de archivos grandes que cada máquina puede bajar directo del origen. perfil: terreno | dl | opcional. md5 null = aún sin calcular.",
+  "archivos": [
+    {"dest": "01_terreno/dem_gale_1m/MSL_Gale_DEM_Mosaic_1m_v3.tif", "bytes": 3868256546, "md5": "bc4cbabf8b06d24f3b25400f0468933b", "perfil": "terreno", "enfoques": "E1 E2 E3 E4 E5 E7 E8",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/MSL/MSL_Gale_DEM_Mosaic_1m_v3.tif"},
+    {"dest": "02_imagenes_orbitales/ortofoto_color_cog/MSL_Gale_HiRISE-LRGB_78quads_sharp_cog.tif", "bytes": 1030625379, "md5": "d11136e54a519e288dcc92d767114162", "perfil": "terreno", "enfoques": "E8 E9 producto",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/MSL/MSL_Gale_HiRISE-LRGB_78quads_sharp_cog.tif"},
+    {"dest": "06_bouldernet/zenodo_8171052_original_2023/Apr2023-Mars-Moon-Earth-mask-5px.zip", "bytes": 265067013, "md5": "af7ae52817d0f42cdda9d10260aa49f9", "perfil": "dl", "enfoques": "E9", "descomprimir": true,
+     "url": "https://zenodo.org/api/records/8171052/files/Apr2023-Mars-Moon-Earth-mask-5px.zip/content"},
+    {"dest": "06_bouldernet/zenodo_8171052_original_2023/best_model.zip", "bytes": 655046115, "md5": "6208aa6f231ae046764b05a8868732c0", "perfil": "dl", "enfoques": "E9", "descomprimir": true,
+     "url": "https://zenodo.org/api/records/8171052/files/best_model.zip/content"},
+    {"dest": "06_bouldernet/zenodo_14250874_ampliado_2024/bouldering_dataset_2024_YOLO_and_detectron2_format.zip", "bytes": 601409488, "md5": "9bca6f6ab69a5090b7b5081189191703", "perfil": "dl", "enfoques": "E9", "descomprimir": true,
+     "url": "https://zenodo.org/api/records/14250874/files/bouldering_dataset_2024_YOLO_and_detectron2_format.zip/content"},
+    {"dest": "02_imagenes_orbitales/ortofoto_gris_25cm/MSL_Gale_Orthophoto_Mosaic_25cm_v3.tif", "bytes": 24356917625, "md5": "e1b8670b605eb593dc1d0551f6c45b64", "perfil": "opcional", "enfoques": "E8 E9",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/MSL/MSL_Gale_Orthophoto_Mosaic_25cm_v3.tif"},
+    {"dest": "06_bouldernet/zenodo_8171052_original_2023/raw_data_BOULDERING.zip", "bytes": 9386554940, "md5": "ad8592ada710a00ec2cd8e0db8be9896", "perfil": "opcional", "enfoques": "E9",
+     "url": "https://zenodo.org/api/records/8171052/files/raw_data_BOULDERING.zip/content"}
+  ]
+}

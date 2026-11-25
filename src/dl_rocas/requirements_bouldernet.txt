@@ -1,0 +1,20 @@
+# E9 env `bouldernet` (separate from the API env): versions used for the paper numbers.
+# conda create -n bouldernet python=3.11 -y
+# then, with that env's python:
+#   python -m pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu124
+#   python -m pip install -r src/dl_rocas/requirements_bouldernet.txt
+# Detectron2 0.6 is NOT on PyPI for Windows: build it from source, commit 247691a,
+#   git clone https://github.com/facebookresearch/detectron2 && cd detectron2
+#   (MSVC 2022 vcvars64.bat; set DISTUTILS_USE_SDK=1; set FORCE_CUDA=0)
+#   python -m pip install --no-build-isolation .
+# torch >= 2.6 changes torch.load's default (weights_only=True) and breaks fvcore's
+# checkpoint loading of BoulderNet's weights: keep torch 2.5.1.
+numpy==2.4.6
+pandas==3.1.1
+rasterio==1.4.4
+geopandas==1.2.0
+shapely==2.2.0
+scikit-image==0.26.0
+opencv-python-headless==5.0.0.93
+pycocotools==2.0.11
+fvcore==0.1.5.post20221221

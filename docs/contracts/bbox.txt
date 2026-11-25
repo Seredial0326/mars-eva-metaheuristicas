@@ -1,0 +1,4 @@
+CRS: data/base/crs.wkt (repo: docs/contracts/crs.wkt), from DEM MSL_Gale_DEM_Mosaic_1m_v3
+BBOX (-te): 8142537.492786024 -285463.075189438 8144537.492786024 -283463.075189438
+BBOX with 64 m margin: 8142473.492786024 -285527.075189438 8144601.492786024 -283399.075189438
+Cell: 1 m (analysis), 0.25 m (orthophotos and U-Net). Nodata: NaN float32. Never use -tap: crop with -te.

@@ -1,0 +1,15 @@
+# Estado local del tablero de agentes (cursor de lectura de cada copia)
+.board/
+
+# Los datos descargados no van al repositorio (46 GB). Sí se versionan
+# la documentación y los scripts que permiten volver a bajarlos.
+data/*
+!data/README.md
+!data/_scripts/
+!data/_scripts/**
+
+.DS_Store
+__pycache__/
+
+# Private Python environment made by `make setup`
+.venv/

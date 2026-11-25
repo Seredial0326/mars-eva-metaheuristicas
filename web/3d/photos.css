@@ -1,0 +1,62 @@
+/* Rover photos of the 3D map (photos.js, P3 issue #46): the card's photo and its view
+   buttons, the list of overlapping stops, the nearest photo on a station's card, the
+   photo-view bar and the photo laid over the 3D view. Colours and buttons follow index.html (panels, #player, .card-action). */
+
+/* Card: the photo, then one button per view of the stop. */
+.photo-media img { display: block; width: 100%; height: auto; border-radius: 4px; background: #1c222b; }
+.photo-missing { padding: 18px 8px; border: 1px dashed var(--border); border-radius: 4px; text-align: center;
+                 color: var(--muted); font-size: 12px; }
+.photo-views { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.photo-source { display: inline-block; margin-top: 6px; font-size: 12px; }
+.photo-stops { display: grid; gap: 4px; }
+.photo-stops button { width: 100%; text-align: left; }
+.photo-stops button span { display: block; font-size: 12px; overflow-wrap: anywhere; }
+#card .card-rows dd { overflow-wrap: anywhere; }       /* photo ids are long */
+
+/* A station's card: its nearest rover photo, small (the card is the station's), then the
+   sentence of where it was taken and the sol and credit (stationPreview). */
+.photo-preview { display: grid; gap: 4px; }
+.photo-preview-img { display: block; max-width: 100%; max-height: 140px; width: auto; height: auto;
+                     border-radius: 4px; background: #1c222b; object-fit: contain; }
+.photo-preview .photo-missing { padding: 10px 8px; }
+.photo-preview-text { font-size: 12px; line-height: 1.35; }
+.photo-preview-meta { font-size: 12px; overflow-wrap: anywhere; }
+
+.photo-views button, .photo-stops button, #photo-bar button {
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: #1c222b;
+  color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.photo-views button:hover, .photo-stops button:hover, #photo-bar button:hover:not(:disabled) { background: #262e3a; }
+.photo-views button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+#photo-bar button:disabled { opacity: 0.5; cursor: default; }
+
+/* Photo view: the bar at the bottom centre, like the rehearsal's player. */
+#photo-bar { bottom: 16px; left: 50%; transform: translateX(-50%); box-sizing: border-box;
+             width: min(560px, calc(100% - 16px)); padding: 10px 12px; }
+#photo-bar [hidden] { display: none; }
+.photo-bar-title { font-weight: 600; }
+.photo-bar-id { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.photo-bar-note { margin-top: 4px; }
+.photo-bar-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+#photo-opacity { flex: 1 1 120px; min-width: 100px; margin: 0; accent-color: var(--accent); }
+.photo-opacity-value { min-width: 3.5em; text-align: right; font-variant-numeric: tabular-nums; }
+#photo-exit { margin-left: auto; }
+
+/* The corrected photo over the 3D view: placed by photos.js on the centred square, under
+   the panels, and never in the way of a click or a drag. */
+.photo-overlay { position: fixed; margin: 0; pointer-events: none; user-select: none; }
+.photo-overlay[hidden] { display: none; }
+
+/* While the photo view is on: "reset the view" goes away (the view is the photo's), and
+   on narrow screens the readout too (the bar takes the bottom). */
+body.photo-view #home { display: none; }
+/* The panel keeps only its title and the relief line, so it covers as little of the
+   photo as it can; its sections come back as they were on exit. */
+body.photo-view #info details, body.photo-view #info hr { display: none; }
+@media (max-width: 900px) { body.photo-view #readout { display: none; } }
+/* On a phone the panel would cover the top of the photo: it comes back on exit. */
+@media (max-width: 520px) {
+  body.photo-view #info { display: none; }
+  #photo-bar { bottom: 8px; padding: 8px 10px; }
+  #photo-bar button { padding: 4px 6px; }
+  .photo-bar-row { gap: 4px; margin-top: 6px; }
+}

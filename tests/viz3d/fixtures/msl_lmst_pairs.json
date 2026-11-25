@@ -1,0 +1,200 @@
+{
+ "source": "Curiosity raw-image index (mars.nasa.gov raw images API), sols 4450-4848, Navcam only",
+ "made_by": "src/viz3d/make_lmst_fixture.py",
+ "note": "date_taken is UTC in whole seconds; lmst is the mission clock (local mean solar time at 137.42 E)",
+ "index": {
+  "pages": 282,
+  "navcam_images_with_lmst": 59584,
+  "sols_with_navcam": 361,
+  "first_sol": 4450,
+  "last_sol": 4848
+ },
+ "pairs": [
+  {
+   "sol": 4450,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-02-11T06:38:53.000Z",
+   "lmst": "Sol-04450M08:30:55.289"
+  },
+  {
+   "sol": 4463,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-02-24T16:52:25.000Z",
+   "lmst": "Sol-04463M10:07:10.117"
+  },
+  {
+   "sol": 4476,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-03-10T04:22:07.000Z",
+   "lmst": "Sol-04476M12:57:33.028"
+  },
+  {
+   "sol": 4489,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-03-23T15:00:45.000Z",
+   "lmst": "Sol-04489M14:58:13.615"
+  },
+  {
+   "sol": 4502,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-04-05T21:54:38.000Z",
+   "lmst": "Sol-04502M13:20:09.939"
+  },
+  {
+   "sol": 4514,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-04-18T05:47:14.000Z",
+   "lmst": "Sol-04514M13:17:46.943"
+  },
+  {
+   "sol": 4530,
+   "instrument": "NAV_LEFT_B",
+   "date_taken": "2025-05-04T17:05:40.000Z",
+   "lmst": "Sol-04530M14:01:37.420"
+  },
+  {
+   "sol": 4543,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-05-18T00:25:59.000Z",
+   "lmst": "Sol-04543M12:49:17.361"
+  },
+  {
+   "sol": 4556,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-05-31T09:40:48.000Z",
+   "lmst": "Sol-04556M13:28:23.464"
+  },
+  {
+   "sol": 4570,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-06-14T17:53:03.000Z",
+   "lmst": "Sol-04570M12:28:04.805"
+  },
+  {
+   "sol": 4583,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-06-28T03:22:12.000Z",
+   "lmst": "Sol-04583M13:21:08.056"
+  },
+  {
+   "sol": 4597,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-07-12T09:41:42.000Z",
+   "lmst": "Sol-04597M10:31:04.857"
+  },
+  {
+   "sol": 4609,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-07-24T23:28:08.000Z",
+   "lmst": "Sol-04609M16:13:03.995"
+  },
+  {
+   "sol": 4622,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-08-07T07:31:45.000Z",
+   "lmst": "Sol-04622M15:42:52.140"
+  },
+  {
+   "sol": 4635,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-08-20T14:46:26.000Z",
+   "lmst": "Sol-04635M14:25:03.217"
+  },
+  {
+   "sol": 4647,
+   "instrument": "NAV_LEFT_B",
+   "date_taken": "2025-09-01T21:52:29.000Z",
+   "lmst": "Sol-04647M13:37:22.100"
+  },
+  {
+   "sol": 4660,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-09-15T02:46:45.000Z",
+   "lmst": "Sol-04660M10:02:53.843"
+  },
+  {
+   "sol": 4673,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-09-28T12:48:27.000Z",
+   "lmst": "Sol-04673M11:27:38.468"
+  },
+  {
+   "sol": 4686,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-10-11T21:16:48.000Z",
+   "lmst": "Sol-04686M11:21:31.445"
+  },
+  {
+   "sol": 4707,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-11-02T09:34:45.000Z",
+   "lmst": "Sol-04707M09:50:37.864"
+  },
+  {
+   "sol": 4711,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-11-06T12:59:53.000Z",
+   "lmst": "Sol-04711M10:36:09.273"
+  },
+  {
+   "sol": 4725,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-11-20T22:41:11.000Z",
+   "lmst": "Sol-04725M11:02:30.983"
+  },
+  {
+   "sol": 4741,
+   "instrument": "NAV_LEFT_B",
+   "date_taken": "2025-12-07T12:13:43.000Z",
+   "lmst": "Sol-04741M13:56:51.489"
+  },
+  {
+   "sol": 4754,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2025-12-20T23:17:25.000Z",
+   "lmst": "Sol-04754M16:21:55.825"
+  },
+  {
+   "sol": 4769,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-01-05T03:35:27.000Z",
+   "lmst": "Sol-04769M10:55:07.948"
+  },
+  {
+   "sol": 4781,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-01-17T17:22:12.000Z",
+   "lmst": "Sol-04781M16:37:26.031"
+  },
+  {
+   "sol": 4793,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-01-30T00:27:04.000Z",
+   "lmst": "Sol-04793M15:48:35.362"
+  },
+  {
+   "sol": 4809,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-02-15T06:06:44.000Z",
+   "lmst": "Sol-04809M11:02:42.919"
+  },
+  {
+   "sol": 4822,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-02-28T18:00:14.000Z",
+   "lmst": "Sol-04822M14:16:15.128"
+  },
+  {
+   "sol": 4836,
+   "instrument": "NAV_RIGHT_B",
+   "date_taken": "2026-03-15T05:29:04.000Z",
+   "lmst": "Sol-04836M16:27:16.247"
+  },
+  {
+   "sol": 4848,
+   "instrument": "NAV_LEFT_B",
+   "date_taken": "2026-03-27T09:54:59.000Z",
+   "lmst": "Sol-04848M13:03:43.503"
+  }
+ ]
+}

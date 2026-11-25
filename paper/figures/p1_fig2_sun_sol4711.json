@@ -1,0 +1,101 @@
+{
+ "made_by": "src/viz3d/paper_figures.py with src/viz3d/sun_table.mjs (web/3d/mars_sun.js: Mars24 algorithm, Allison and McEwen 2000)",
+ "sol": 4711,
+ "site": {
+  "x_m": 8143537.492786024,
+  "y_m": -284463.075189438,
+  "lon_east_deg": 137.3864,
+  "lat_planetocentric_deg": -4.79906,
+  "lat_planetographic_deg": -4.85579
+ },
+ "key_times": [
+  {
+   "local_true_solar_time": "07:00",
+   "hours": 7,
+   "utc": "2025-11-06T08:39:21.434Z",
+   "elevation_deg": 14.398,
+   "azimuth_deg": 83.082,
+   "hour_angle_deg": -75,
+   "ls_deg": 167.21,
+   "equation_of_time_min": 37.48,
+   "mission_sol": 4711,
+   "mission_lmst": "06:23",
+   "sun_light": 2.6,
+   "sky_light": 1.1
+  },
+  {
+   "local_true_solar_time": "12:00",
+   "hours": 12,
+   "utc": "2025-11-06T13:47:34.719Z",
+   "elevation_deg": 79.731,
+   "azimuth_deg": 0,
+   "hour_angle_deg": 0,
+   "ls_deg": 167.326,
+   "equation_of_time_min": 37.51,
+   "mission_sol": 4711,
+   "mission_lmst": "11:23",
+   "sun_light": 2.6,
+   "sky_light": 1.1
+  },
+  {
+   "local_true_solar_time": "15:00",
+   "hours": 15,
+   "utc": "2025-11-06T16:52:30.693Z",
+   "elevation_deg": 43.909,
+   "azimuth_deg": 282.269,
+   "hour_angle_deg": 45,
+   "ls_deg": 167.395,
+   "equation_of_time_min": 37.52,
+   "mission_sol": 4711,
+   "mission_lmst": "14:23",
+   "sun_light": 2.6,
+   "sky_light": 1.1
+  },
+  {
+   "local_true_solar_time": "17:00",
+   "hours": 17,
+   "utc": "2025-11-06T18:55:48.010Z",
+   "elevation_deg": 14.409,
+   "azimuth_deg": 276.817,
+   "hour_angle_deg": 75,
+   "ls_deg": 167.442,
+   "equation_of_time_min": 37.53,
+   "mission_sol": 4711,
+   "mission_lmst": "16:23",
+   "sun_light": 2.6,
+   "sky_light": 1.1
+  }
+ ],
+ "crossings": [
+  {
+   "what": "sunrise",
+   "local_true_solar_time": "06:02",
+   "hours": 6.0311,
+   "utc": "2025-11-06T07:39:37.750Z",
+   "elevation_deg": 0,
+   "azimuth_deg": 84.508,
+   "hour_angle_deg": -89.534,
+   "ls_deg": 167.187,
+   "equation_of_time_min": 37.48,
+   "mission_sol": 4711,
+   "mission_lmst": "05:25",
+   "sun_light": 0,
+   "sky_light": 0.7
+  },
+  {
+   "what": "sunset",
+   "local_true_solar_time": "17:58",
+   "hours": 17.9696,
+   "utc": "2025-11-06T19:55:34.162Z",
+   "elevation_deg": 0,
+   "azimuth_deg": 275.375,
+   "hour_angle_deg": 89.544,
+   "ls_deg": 167.464,
+   "equation_of_time_min": 37.54,
+   "mission_sol": 4711,
+   "mission_lmst": "17:21",
+   "sun_light": 0,
+   "sky_light": 0.7
+  }
+ ]
+}
