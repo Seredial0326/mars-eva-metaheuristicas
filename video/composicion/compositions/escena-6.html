@@ -1,0 +1,34 @@
+<template>
+<style>
+#root {position:absolute;inset:0;overflow:hidden;background:#111b21;color:#f3f1e9;font:32px/1.28 "Segoe UI",Arial,sans-serif}
+#root * {box-sizing:border-box}
+
+.s6-base {position:absolute;inset:0;padding:56px 60px}
+.s6-base h2 {font-size:62px;font-weight:650;letter-spacing:-.035em;line-height:1.1;margin:0 0 42px 36px}
+.s6-figure {position:absolute;left:60px;top:165px;width:1800px;height:720px;background:#fcfcfa}
+.s6-figure img {display:block;width:100%;height:100%}
+.s6-ring {position:absolute;left:905px;width:865px;height:63px;border:4px solid #304e50;border-radius:12px;background:rgba(119,223,219,.1);pointer-events:none;opacity:0}
+.s6-readout {position:absolute;left:96px;right:96px;bottom:71px;display:flex;align-items:baseline;gap:38px;color:#f3f1e9;font-size:38px}
+.s6-readout strong {color:#77dfdb;font-size:61px;letter-spacing:-.03em;font-weight:600;line-height:1}
+
+</style>
+<div id="root" data-composition-id="escena-6" data-width="1920" data-height="1080" data-duration="23.274667">
+<div class="s6-base"><h2>¿Qué cambia con las ventanas de horario?</h2><div class="s6-figure">
+<img class="research-figure" src="assets/resultados/comparacion-ventanas.png" alt="Brecha y porcentaje de corridas en la referencia, con y sin ventanas">
+<div id="s6-marcador" class="s6-ring" style="top:247px" data-layout-allow-overlap></div></div></div><section id="s6-leyenda" class="clip s6-readout" data-start="0" data-duration="5" data-track-index="2" data-layout-allow-overlap><strong>○ Sin ventanas</strong><span>● Con ventanas</span></section>
+<section id="s6-friedman" class="clip s6-readout" data-start="5" data-duration="3" data-track-index="2" data-layout-allow-overlap><strong>Prueba de Friedman</strong><span>Diferencias significativas con ventanas</span></section>
+<section id="s6-probabilidad" class="clip s6-readout" data-start="8" data-duration="4" data-track-index="2" data-layout-allow-overlap><strong>p = 0,0002</strong><span>Prueba de Friedman con ventanas · 16 instancias</span></section>
+<section id="s6-ga" class="clip s6-readout" data-start="12" data-duration="3" data-track-index="2" data-layout-allow-overlap><strong>GA · 90 % → 94 %</strong><span>Corridas que alcanzan la referencia</span></section>
+<section id="s6-aco" class="clip s6-readout" data-start="15" data-duration="5" data-track-index="2" data-layout-allow-overlap><strong>ACO · 73 % → 29 %</strong><span>Corridas que alcanzan la referencia</span></section>
+<section id="s6-cierre" class="clip s6-readout" data-start="20" data-duration="3.274667" data-track-index="2" data-layout-allow-overlap><strong>GA · 90 % → 94 %</strong><span>Corridas que alcanzan la referencia</span></section>
+</div>
+<script>
+{
+ const tl = gsap.timeline({paused:true});
+tl.fromTo('#s6-marcador',{opacity:0},{opacity:1,duration:.22},12);
+ tl.fromTo('#s6-marcador',{y:0},{y:270,duration:.37,ease:'power2.inOut',immediateRender:false},15);
+ tl.fromTo('#s6-marcador',{y:270},{y:0,duration:.45,ease:'power2.inOut',immediateRender:false},20);
+ window.__timelines["escena-6"] = tl;
+}
+</script>
+</template>
