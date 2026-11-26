@@ -1,0 +1,63 @@
+<template>
+<style>
+#root { position:absolute; inset:0; overflow:hidden; background:#111b21; color:#f3f1e9;
+  font-family:Arial,Helvetica,sans-serif; }
+#root * { box-sizing:border-box; }
+.source-head {display:flex;justify-content:space-between;align-items:center;
+  padding:0 0 24px;border-bottom:2px solid #526267; font-size:28px; color:#cbd7d7}
+.source-head strong {font-size:30px;color:#f2a478}
+.scene-padding {position:absolute;inset:66px 108px 68px}
+.scene-padding h1 {font-weight:600;letter-spacing:-2.6px}
+
+.scene-padding h1 {margin:43px 0 47px;font-size:78px}
+.families {display:grid;grid-template-columns:1fr 1fr;gap:86px}
+.families h2 {margin:0 0 15px;font-size:44px;color:#79dfd7;font-weight:600}
+.families section:first-child h2 {color:#ffac83}
+.algorithm {display:flex;align-items:center;gap:24px;height:82px;border-top:1px solid #42565c;font-size:39px}
+.algorithm b {font:600 30px Consolas,monospace;color:#b9cdce;min-width:128px}
+.sampling {position:absolute;bottom:0;left:0;right:0;border-top:3px solid #93a4a6;
+ display:grid;grid-template-columns:1fr 1.42fr 1fr;padding:30px 0 0;gap:42px}
+.sampling>div+div {border-left:1px solid #46595d;padding-left:36px}
+.sampling small {color:#b9cbcb;font-size:28px}
+.sampling strong {display:block;font-size:47px;margin-top:14px;font-weight:600;letter-spacing:-1.6px}
+.sampling p {font-size:27px;margin:12px 0 0;color:#c4d5d5}
+</style>
+<div id="root" data-composition-id="escena-2" data-width="1920" data-height="1080" data-duration="30.293333">
+
+<div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Diseño del experimento</span></header>
+  <h1>Seis algoritmos para planear la ruta</h1>
+  <div class="families"><section><h2>Exactos</h2><div class="algorithm" id="alg-dp"><b>DP</b><span>Programación dinámica</span></div><div class="algorithm" id="alg-cpsat"><b>CP-SAT</b><span>CP-SAT de Google OR-Tools</span></div></section><section><h2>Metaheurísticas</h2><div class="algorithm" id="alg-ils"><b>ILS</b><span>Búsqueda local iterada</span></div><div class="algorithm" id="alg-sa"><b>SA</b><span>Recocido simulado</span></div><div class="algorithm" id="alg-aco"><b>ACO</b><span>Colonia de hormigas</span></div><div class="algorithm" id="alg-ga"><b>GA</b><span>Algoritmo genético</span></div></section></div>
+  <div class="sampling">
+    <div id="alg-pool"><small>Conjunto completo</small><strong>120 estaciones</strong></div>
+    <div id="alg-sizes"><small id="alg-samples">16 instancias experimentales</small><strong>20, 50, 80 y 100 nodos</strong><p>El hábitat cuenta como un nodo.</p></div>
+    <div id="alg-limits"><small>Diseño de las corridas</small><strong>120 y 180 min</strong><p>3 semillas aleatorias</p></div>
+  </div>
+</div>
+</div>
+<script>
+(()=>{
+const tl = gsap.timeline({paused:true});
+tl.fromTo("#alg-samples",{color:"#b9cbcb"},{color:"#89ebe3",duration:0.18}, 23.17);
+tl.to("#alg-dp span",{color:"#ffb18c",duration:0.18}, 5.71);
+tl.to("#alg-dp span",{color:"#f3f1e9",duration:0.18}, 6.960);
+tl.to("#alg-cpsat span",{color:"#ffb18c",duration:0.18}, 7.16);
+tl.to("#alg-cpsat span",{color:"#f3f1e9",duration:0.18}, 10.800);
+tl.to("#alg-ils span",{color:"#89ebe3",duration:0.18}, 11);
+tl.to("#alg-ils span",{color:"#f3f1e9",duration:0.18}, 13.030);
+tl.to("#alg-sa span",{color:"#89ebe3",duration:0.18}, 13.23);
+tl.to("#alg-sa span",{color:"#f3f1e9",duration:0.18}, 14.910);
+tl.to("#alg-aco span",{color:"#89ebe3",duration:0.18}, 15.11);
+tl.to("#alg-aco span",{color:"#f3f1e9",duration:0.18}, 15.940);
+tl.to("#alg-ga span",{color:"#89ebe3",duration:0.18}, 16.14);
+tl.to("#alg-ga span",{color:"#f3f1e9",duration:0.18}, 18.820);
+tl.to("#alg-pool strong",{color:"#89ebe3",duration:0.18}, 19.02);
+tl.to("#alg-pool strong",{color:"#f3f1e9",duration:0.18}, 25.030);
+tl.to("#alg-sizes strong",{color:"#89ebe3",duration:0.18}, 25.23);
+tl.to("#alg-sizes strong",{color:"#f3f1e9",duration:0.18}, 26.970);
+tl.to("#alg-limits strong",{color:"#89ebe3",duration:0.18}, 27.17);
+tl.to("#alg-limits strong",{color:"#f3f1e9",duration:0.18}, 30.093);
+window.__timelines["escena-2"] = tl;
+})();
+</script>
+</template>

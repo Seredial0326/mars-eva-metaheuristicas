@@ -1,0 +1,108 @@
+<template>
+<style>
+#root { position:absolute; inset:0; overflow:hidden; background:#111b21; color:#f3f1e9;
+  font-family:Arial,Helvetica,sans-serif; }
+#root * { box-sizing:border-box; }
+.source-head {display:flex;justify-content:space-between;align-items:center;
+  padding:0 0 24px;border-bottom:2px solid #526267; font-size:28px; color:#cbd7d7}
+.source-head strong {font-size:30px;color:#f2a478}
+.scene-padding {position:absolute;inset:66px 108px 68px}
+.scene-padding h1 {font-weight:600;letter-spacing:-2.6px}
+
+.sheet {position:absolute;inset:0;background:#111b21}
+.sheet h1 {margin:38px 0 35px;font-size:73px}
+.listing {border:1px solid #455b65;background:#18262d;padding-bottom:19px}
+.filepath {background:#223239;color:#b5c5c9;padding:22px 34px;font:30px Consolas,monospace}
+.filepath b {color:#8de9e1}
+.snippet {margin:23px 0 0}
+.snippet+.snippet {border-top:1px dashed #52646a;padding-top:14px;margin-top:14px}
+.line {display:flex;align-items:center;min-height:54px;border-left:4px solid transparent}
+.line.active {background:#233b40;border-left-color:#6fd5cf}
+.ln {text-align:right;color:#94a8af;min-width:100px;padding-right:32px;font:25px Consolas,monospace}
+.line code {white-space:pre;font:32px Consolas,'Courier New',monospace;color:#eff4ec}
+.line i {font-style:normal}
+.kw {color:#ffa985}.num {color:#b9e79c}.str {color:#f2d49e}.comment {color:#acc0c3}
+.listing table {width:calc(100% - 68px);margin:22px 34px;border-collapse:collapse;font:31px Consolas,monospace}
+.listing th,.listing td {padding:18px 10px;text-align:left;border-bottom:1px solid #41535a}
+.listing th {color:#7bddda}.listing td {color:#eff4ec}.listing td:first-child {color:#ffbb92}
+.instance {font:29px Consolas,monospace;color:#d3e1df;margin:26px 44px 12px}
+</style>
+<div id="root" data-composition-id="escena-4" data-width="1920" data-height="1080" data-duration="27.1535">
+
+<div id="source-ils" class="clip sheet" data-track-index="0" data-start="0" data-duration="3.54000">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Código fuente</span></header>
+  <h1>Perturbar la ruta</h1>
+  <div class="listing"><div class="filepath">src/orienteering/solvers/<b>ils.py</b></div><div class="snippet"><div class="line"><span class="ln">50</span><code>shake_at = (shake_at - <i class="num">1</i>) % len(inner) + <i class="num">1</i></code></div>
+<div class="line active"><span class="ln">51</span><code>removed = set(range(shake_at - <i class="num">1</i>, shake_at - <i class="num">1</i> + shake_size))</code></div>
+<div class="line"><span class="ln">52</span><code>inner = [k <i class="kw">for</i> m, k <i class="kw">in</i> enumerate(inner) <i class="kw">if</i> m <i class="kw">not</i> <i class="kw">in</i> removed]</code></div>
+<div class="line"><span class="ln">53</span><code>current = ev.repair([current[<i class="num">0</i>], *inner, current[-<i class="num">1</i>]]) <i class="kw">or</i> ev.initial()</code></div>
+<div class="line active"><span class="ln">54</span><code>shake_at += shake_size</code></div>
+<div class="line active"><span class="ln">55</span><code>shake_size += <i class="num">1</i></code></div></div></div>
+ </div></div>
+
+<div id="source-sa" class="clip sheet" data-track-index="0" data-start="3.54" data-duration="5.10000">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Código fuente</span></header>
+  <h1>Aceptar una ruta peor</h1>
+  <div class="listing"><div class="filepath">src/orienteering/solvers/<b>sa.py</b></div><div class="snippet"><div class="line"><span class="ln">62</span><code>cand_score = score(cand)</code></div>
+<div class="line"><span class="ln">63</span><code>delta = cand_score - cur_score</code></div>
+<div class="line active"><span class="ln">64</span><code><i class="kw">if</i> cand_score &gt;= cur_score <i class="kw">or</i> rng.random() &lt; math.exp(delta / temp):</code></div>
+<div class="line"><span class="ln">65</span><code>    current, cur_score, accepted = cand, cand_score, <i class="kw">True</i></code></div>
+<div class="line"><span class="ln">66</span><code>    <i class="kw">if</i> ev.key(current) &gt; ev.key(best):</code></div>
+<div class="line"><span class="ln">67</span><code>        best = list(current)</code></div></div></div>
+ </div></div>
+
+<div id="source-aco" class="clip sheet" data-track-index="0" data-start="8.64" data-duration="6.60000">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Código fuente</span></header>
+  <h1>Elegir la siguiente estación</h1>
+  <div class="listing"><div class="filepath">src/orienteering/solvers/<b>aco.py</b></div><div class="snippet"><div class="line active"><span class="ln">104</span><code>weight = tau[at, cand] * eta[at, cand]</code></div>
+<div class="line"><span class="ln">105</span><code><i class="kw">if</i> weight.sum() &lt;= <i class="num">0</i>:</code></div>
+<div class="line"><span class="ln">106</span><code>    nxt = int(cand[rng.integers(len(cand))])</code></div>
+<div class="line active"><span class="ln">107</span><code><i class="kw">elif</i> rng.random() &lt; Q0:</code></div>
+<div class="line"><span class="ln">108</span><code>    nxt = int(cand[np.argmax(weight)])</code></div>
+<div class="line"><span class="ln">109</span><code><i class="kw">else</i>:</code></div>
+<div class="line"><span class="ln">110</span><code>    nxt = int(rng.choice(cand, p=weight / weight.sum()))</code></div>
+<div class="line active"><span class="ln">111</span><code>tau[at, nxt] = (<i class="num">1</i> - RHO) * tau[at, nxt] + RHO * tau0     <i class="comment"># local update</i></code></div></div></div>
+ </div></div>
+
+<div id="source-ga" class="clip sheet" data-track-index="0" data-start="15.24" data-duration="4.80000">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Código fuente</span></header>
+  <h1>Cruzar rutas y reparar el hijo</h1>
+  <div class="listing"><div class="filepath">src/orienteering/solvers/<b>ga.py</b></div><div class="snippet"><div class="line active"><span class="ln">98</span><code>segment = inner_a[i:j]</code></div>
+<div class="line"><span class="ln">99</span><code>taken = set(segment)</code></div>
+<div class="line"><span class="ln">100</span><code>rest = [k <i class="kw">for</i> k <i class="kw">in</i> inner_b <i class="kw">if</i> k <i class="kw">not</i> <i class="kw">in</i> taken]</code></div>
+<div class="line active"><span class="ln">101</span><code><i class="kw">return</i> [a[<i class="num">0</i>], *segment, *rest, a[-<i class="num">1</i>]]</code></div></div><div class="snippet"><div class="line"><span class="ln">64</span><code>child = crossover(a, b, rng)</code></div>
+<div class="line"><span class="ln">65</span><code><i class="kw">if</i> rng.random() &lt; MUTATION:</code></div>
+<div class="line"><span class="ln">66</span><code>    child = mutate(ev, child, free, rng)</code></div>
+<div class="line active"><span class="ln">67</span><code>child = ev.repair(child) <i class="kw">or</i> empty</code></div>
+<div class="line"><span class="ln">68</span><code>children.append(ev.insert_greedy(child))</code></div></div></div>
+ </div></div>
+
+<div id="source-logging" class="clip sheet" data-track-index="0" data-start="20.04" data-duration="4.33000">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Código fuente</span></header>
+  <h1>Registrar cada generación</h1>
+  <div class="listing"><div class="filepath">src/orienteering/solvers/<b>ga.py</b></div><div class="snippet"><div class="line"><span class="ln">75</span><code>points = [ev.points(r) <i class="kw">for</i> r <i class="kw">in</i> pop]</code></div>
+<div class="line active"><span class="ln">76</span><code>trace(iter=iters, best_prize=ev.points(best), best_energy_j=ev.total(best),</code></div>
+<div class="line active"><span class="ln">77</span><code>      pop_best=max(points), pop_mean=float(np.mean(points)), pop_worst=min(points),</code></div>
+<div class="line active"><span class="ln">78</span><code>      diversity=len({tuple(r) <i class="kw">for</i> r <i class="kw">in</i> pop}) / len(pop), stale=stale)</code></div></div></div>
+ </div></div>
+
+<div id="source-trace" class="clip sheet" data-track-index="0" data-start="24.37" data-duration="2.78350">
+ <div class="scene-padding">
+  <header class="source-head"><strong>Mars EVA Planner</strong><span>Datos de la corrida</span></header>
+  <h1>Leer la traza de búsqueda</h1>
+  <div class="listing"><div class="filepath">data/lab/runs/final/traces/<b>trace_ga.csv</b></div><p class="instance">real-n100-0-120min &nbsp;·&nbsp; Semilla 0</p><table><thead><tr><th>iter</th><th>pop_best</th><th>pop_mean</th><th>pop_worst</th><th>diversity</th></tr></thead><tbody><tr><td>0</td><td>39.0</td><td>36.2</td><td>29.0</td><td>0.9333333333333333</td></tr><tr><td>1</td><td>39.0</td><td>37.1</td><td>33.0</td><td>0.9666666666666667</td></tr><tr><td>2</td><td>40.0</td><td>38.43333333333333</td><td>34.0</td><td>0.8</td></tr><tr><td>3</td><td>40.0</td><td>38.266666666666666</td><td>34.0</td><td>0.8</td></tr><tr><td>4</td><td>40.0</td><td>39.0</td><td>34.0</td><td>0.6333333333333333</td></tr></tbody></table></div>
+ </div></div>
+</div>
+<script>
+(()=>{
+const tl = gsap.timeline({paused:true});
+tl.fromTo("#source-ga .snippet + .snippet",{opacity:0.48},{opacity:1,duration:0.18}, 16.92);
+window.__timelines["escena-4"] = tl;
+})();
+</script>
+</template>

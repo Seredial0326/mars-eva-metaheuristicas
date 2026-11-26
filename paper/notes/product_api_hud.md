@@ -379,3 +379,14 @@ The presentation team can reproduce the run with `video/README.md`. Figure 2 sho
 $stats = Get-Content video/grabaciones/resultados-03.json -Raw | ConvertFrom-Json
 ffmpeg -ss $stats.aco.at -i video/grabaciones/escena-03.webm -frames:v 1 -q:v 3 paper/figures/product_fig2_lab_aco.jpg
 ```
+
+## Full video demonstration
+
+Can the live laboratory expose the exact solver limit during the demonstration? Playwright selected `real-n50-0-120min` in the local laboratory, ran the five enabled algorithms and recorded the charts. The interface disabled dynamic programming above 18 nodes. CP-SAT certified an optimal prize of 35. ILS, SA, ACO and GA each reached 35 in this run. The source is `video/capturar-mapa-lab.mjs` and its local output `video/grabaciones/ejecucion-07.json`. The recording uses one seed for randomized methods. Benchmark comparisons use the final runs referenced in `docs/lab/README.md`.
+
+The presentation team can use the full HyperFrames project in `video/composicion/`. The edit brings the results forward by shortening the server wait. It retains the captured output and the visible solver limit. Figure 3 shows the laboratory execution for the selected instance. Reproduce the figure from the project root after the capture.
+
+```powershell
+node video/capturar-mapa-lab.mjs lab
+ffmpeg -ss 5.5 -i video/composicion/assets/lab-final.mp4 -frames:v 1 -q:v 3 paper/figures/product_fig3_lab_live.jpg
+```

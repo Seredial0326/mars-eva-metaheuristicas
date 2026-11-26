@@ -1,5 +1,15 @@
-# Escena 3
+# Revisión del montaje
 
-El fotograma inicial muestra el recorte completo del terreno y el hábitat. A los 11,5 s se ven la ruta de DP y los indicadores de estaciones y minutos en el mismo plano. A los 25 s aparecen el circuito de ACO, las 14 visitas y los 180 minutos. A los 30 s se mantiene el aviso de CP-SAT con la ruta anterior de fondo.
+La línea de tiempo se basa en los siete audios decodificados. El archivo `tiempos.json` registra sus duraciones y los cortes. El montaje usa la narración a su velocidad original.
 
-La composición conserva el encuadre completo a 1920 × 1080. Los rótulos pequeños del HUD se leen mejor a tamaño original. La toma incluye pausas en los resultados y usa la voz local de 27,5 s. La velocidad de reproducción se ajustó para que el aviso siga en pantalla después de la voz. El tiempo de respuesta citado en la narración se puede contrastar con la medición de Playwright en `../grabaciones/resultados-03.json`.
+| Escena | Comprobación |
+| --- | --- |
+| 1 | La ortofoto ocupa el recorte completo al abrir. El zoom en la aplicación termina en el hábitat. |
+| 2 | Los seis nombres se leen en dos grupos. Las 120 estaciones del conjunto completo se distinguen de las 16 instancias de 20, 50, 80 y 100 nodos. |
+| 3 | La toma aprobada muestra las rutas de DP y ACO y conserva el aviso de CP-SAT. El tiempo de ACO medido antes del montaje fue 5,38 s. |
+| 4 | El resaltado usa el código y la traza reales. El bloque de ILS abre la escena mientras la voz presenta los archivos. |
+| 5 | La fila de GA aparece al mencionar la brecha. El perfil entra con el 90 % y la fila de ACO con la frase siguiente. Las cuatro figuras provienen de la corrida final. |
+| 6 | El gráfico original muestra el paso de 73 % a 29 % en ACO y vuelve a destacar GA. |
+| 7 | El laboratorio ejecuta la instancia de 50 nodos con cinco métodos y muestra el límite de DP. El corte vuelve al mapa con el circuito ACO. |
+
+Las pausas de lectura mantienen las láminas visibles mientras avanza la narración. Las notas secundarias conservan el tamaño de la interfaz o de la figura de origen. Conviene revisar las capturas a 1080p.

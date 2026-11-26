@@ -8,3 +8,7 @@ composicion/.transcode-cache/
 composicion/.waveform-cache/
 composicion/assets/
 composicion/renders/
+composicion/.thumbnails/
+composicion-prueba-03/
+.mars-eva-planner.hf-transaction-*/
+revision/

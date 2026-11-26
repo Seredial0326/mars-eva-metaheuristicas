@@ -5,7 +5,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const video = fileURLToPath(new URL('.', import.meta.url));
-const project = path.join(video, 'composicion');
+const project = path.join(video, 'composicion-prueba-03');
 const assets = path.join(project, 'assets');
 mkdirSync(assets, {recursive:true});
 const source = path.join(video, 'grabaciones', 'escena-03.webm');
