@@ -1,0 +1,10 @@
+node_modules/
+audio/
+grabaciones/
+*.mp4
+.escena-03-prueba.hf-transaction-*/
+composicion/.hyperframes/
+composicion/.transcode-cache/
+composicion/.waveform-cache/
+composicion/assets/
+composicion/renders/
