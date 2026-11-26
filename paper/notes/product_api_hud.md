@@ -368,3 +368,14 @@ Required inputs: `data/base/` (base-grid-v2), `data/tiles/` (tiles-v2), `data/e2
 - `docs/research/station_value_rubric.md` and `docs/research/station_value_notes/`.
 - `paper/figures/product_fig1_redline_tour_radio.png` and `data/product/product_fig1.json` (its numbers).
 - Releases made for the product: `rems-v1` (REMS feed), `minerals-v1` (27 deduplicated CRISM/OMEGA detections within 300 km), `themis-v1` (the THEMIS night IR tile).
+
+## Lab dataset walkthrough
+
+Can a presenter reproduce a small exact route and a larger heuristic route directly in the HUD? After warming the local server, Playwright loaded each dataset through Stations, selected its solver and budget through Plan, and read the rendered statistics. Dynamic programming visited 5 of 19 stations in 116 of 120 minutes. ACO visited 14 of 120 in 180 of 180 minutes. The latter request took 5.38 s from clicking Plan to the interface becoming ready. This single end-to-end timing includes browser and server work. CP-SAT reported a limit of 59 stations plus the habitat. The previous ACO route remained visible underneath the warning. All values come from `video/capturar-03.mjs` and its local output `video/grabaciones/resultados-03.json`.
+
+The presentation team can reproduce the run with `video/README.md`. Figure 2 shows the live ACO result. Extract the matching frame from the original capture using the ACO timestamp saved by the script.
+
+```powershell
+$stats = Get-Content video/grabaciones/resultados-03.json -Raw | ConvertFrom-Json
+ffmpeg -ss $stats.aco.at -i video/grabaciones/escena-03.webm -frames:v 1 -q:v 3 paper/figures/product_fig2_lab_aco.jpg
+```
